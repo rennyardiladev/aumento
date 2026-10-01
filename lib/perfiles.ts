@@ -3,6 +3,18 @@ import type {
   Perfil,
 } from "./plataformas";
 
+import {
+  getInstagramProfile,
+} from "@/app/actions/instagram";
+
+import {
+  getTikTokProfile,
+} from "@/app/actions/tiktok";
+
+import {
+  getFacebookProfile,
+} from "@/app/actions/facebook";
+
 // ============================================================
 // CONFIGURACIÓN
 // ============================================================
@@ -13,12 +25,12 @@ const UA =
   "Chrome/124.0 Safari/537.36";
 
 // ============================================================
-// INSTAGRAM / BRIGHT DATA (ASYNC)
+// INSTAGRAM / BRIGHT DATA (ASYNC) - Server Action
 // ============================================================
 
 interface InstagramResult extends Perfil {
   processing?: boolean;
-  snapshotId?: string;
+  snapshotId?: string | null;
   error?: string;
 }
 
@@ -26,71 +38,35 @@ async function instagram(
   user: string,
   snapshotId?: string
 ): Promise<InstagramResult> {
-  if (!BRIGHTDATA_API_KEY) {
-    throw new Error("BRIGHTDATA_API_KEY no configurada");
-  }
-
-  const cleanUsername = user
-    .trim()
-    .replace(/^@/, "")
-    .replace(/^https?:\/\/(www\.)?instagram\.com\/@?/i, "")
-    .split("?")[0]
-    .split("/")[0]
-    .trim();
-
-  if (!cleanUsername) {
-    return { existe: false, error: "Usuario inválido" };
-  }
-
-  // Usar ruta relativa para llamadas internas (funciona en Vercel)
-  const apiUrl = snapshotId
-    ? `/api/instagram?user=${encodeURIComponent(cleanUsername)}&snapshot=${encodeURIComponent(snapshotId)}`
-    : `/api/instagram?user=${encodeURIComponent(cleanUsername)}`;
-
-  console.log("[Instagram] Consultando:", apiUrl);
-
-  const response = await fetch(apiUrl, {
-    method: "GET",
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error || `Instagram API HTTP ${response.status}`);
-  }
-
-  const data = await response.json();
-
-  // Si está procesando
-  if (data.status === "processing") {
-    console.log("[Instagram] Snapshot procesando:", data.snapshotId);
+  const result = await getInstagramProfile(user, snapshotId);
+  
+  if (result.processing) {
     return {
       existe: false,
       processing: true,
-      snapshotId: data.snapshotId,
+      snapshotId: result.snapshotId ?? undefined,
     };
   }
 
-  // Si hay error
-  if (!data.success) {
-    if (data.code === "dead_page") return { existe: false };
-    throw new Error(data.error || "Error en Instagram API");
+  if (result.error && result.error !== "Perfil no encontrado") {
+    throw new Error(result.error);
   }
 
-  // Datos listos
-  const profile = data.data;
+  if (!result.existe) {
+    return { existe: false };
+  }
+
   return {
     existe: true,
-    privada: profile.privada ?? false,
-    seguidores: profile.seguidores ?? null,
-    nombre: profile.nombre ?? profile.username ?? cleanUsername,
-    foto: profile.foto ?? null,
+    privada: result.privada ?? false,
+    seguidores: result.seguidores ?? null,
+    nombre: result.nombre ?? result.username ?? user,
+    foto: result.foto ?? null,
   };
 }
 
 // ============================================================
-// TIKTOK / BRIGHT DATA
+// TIKTOK / BRIGHT DATA - Server Action
 // ============================================================
 
 const BRIGHTDATA_API_KEY =
@@ -99,7 +75,7 @@ const BRIGHTDATA_API_KEY =
 interface TikTokResult
   extends Perfil {
   processing?: boolean;
-  snapshotId?: string;
+  snapshotId?: string | null;
   error?: string;
 }
 
@@ -107,160 +83,30 @@ async function tiktok(
   user: string,
   snapshotId?: string
 ): Promise<TikTokResult> {
-  if (!BRIGHTDATA_API_KEY) {
-    throw new Error(
-      "BRIGHTDATA_API_KEY no configurada"
-    );
-  }
-
-  const cleanUsername = user
-    .trim()
-    .replace(/^@/, "")
-    .replace(
-      /^https?:\/\/(www\.)?tiktok\.com\/@?/i,
-      ""
-    )
-    .split("?")[0]
-    .split("/")[0]
-    .trim();
-
-  if (!cleanUsername) {
+  const result = await getTikTokProfile(user, snapshotId);
+  
+  if (result.processing) {
     return {
       existe: false,
-      error: "Usuario inválido",
-    };
-  }
-
-  // Usar ruta relativa para llamadas internas (funciona en Vercel)
-  const apiUrl = snapshotId
-    ? `/api/tiktok?user=${encodeURIComponent(cleanUsername)}&snapshot=${encodeURIComponent(snapshotId)}`
-    : `/api/tiktok?user=${encodeURIComponent(cleanUsername)}`;
-
-  console.log(
-    "[TikTok] Consultando:",
-    apiUrl
-  );
-
-  const response =
-    await fetch(apiUrl, {
-      method: "GET",
-
-      headers: {
-        Accept:
-          "application/json",
-      },
-
-      cache: "no-store",
-    });
-
-  const text =
-    await response.text();
-
-  let data: any;
-
-  try {
-    data =
-      JSON.parse(text);
-  } catch {
-    throw new Error(
-      "Respuesta inválida de API TikTok"
-    );
-  }
-
-  console.log(
-    "[TikTok] HTTP:",
-    response.status
-  );
-
-  // ==========================================================
-  // SNAPSHOT PROCESANDO
-  // ==========================================================
-
-  if (
-    data?.status ===
-    "processing"
-  ) {
-    console.log(
-      "[TikTok] Snapshot procesando:",
-      data.snapshotId
-    );
-
-    return {
-      existe: false,
-
       processing: true,
-
-      snapshotId:
-        data.snapshotId,
+      snapshotId: result.snapshotId ?? undefined,
     };
   }
 
-  // ==========================================================
-  // ERROR HTTP
-  // ==========================================================
-
-  if (!response.ok) {
-    throw new Error(
-      data?.error ||
-        `TikTok API HTTP ${response.status}`
-    );
+  if (result.error && result.error !== "Perfil no encontrado") {
+    throw new Error(result.error);
   }
 
-  // ==========================================================
-  // PERFIL NO ENCONTRADO
-  // ==========================================================
-
-  if (
-    data?.success === false
-  ) {
-    if (
-      data?.code ===
-      "dead_page"
-    ) {
-      return {
-        existe: false,
-      };
-    }
-
-    return {
-      existe: false,
-
-      error:
-        data?.error ||
-        "Perfil de TikTok no encontrado",
-    };
-  }
-
-  // ==========================================================
-  // DATOS
-  // ==========================================================
-
-  const profile =
-    data?.data;
-
-  if (!profile) {
-    return {
-      existe: false,
-    };
+  if (!result.existe) {
+    return { existe: false };
   }
 
   return {
     existe: true,
-
     privada: false,
-
-    seguidores:
-      profile.followers ??
-      null,
-
-    nombre:
-      profile.displayName ||
-      profile.username ||
-      cleanUsername,
-
-    foto:
-      profile.profilePic ||
-      null,
+    seguidores: result.seguidores ?? null,
+    nombre: result.nombre ?? result.username ?? user,
+    foto: result.foto ?? null,
   };
 }
 
@@ -630,13 +476,13 @@ async function spotify(
 }
 
 // ============================================================
-// FACEBOOK / BRIGHT DATA
+// FACEBOOK / BRIGHT DATA - Server Action
 // ============================================================
 
 interface FacebookResult
   extends Perfil {
   processing?: boolean;
-  snapshotId?: string;
+  snapshotId?: string | null;
   error?: string;
 }
 
@@ -644,186 +490,30 @@ async function facebook(
   user: string,
   snapshotId?: string
 ): Promise<FacebookResult> {
-  const cleanUsername =
-    user
-      .trim()
-      .replace(/^@/, "")
-      .replace(
-        /^https?:\/\/(www\.)?facebook\.com\/@?/i,
-        ""
-      )
-      .split("?")[0]
-      .split("/")[0]
-      .trim();
-
-  if (!cleanUsername) {
+  const result = await getFacebookProfile(user, snapshotId);
+  
+  if (result.processing) {
     return {
       existe: false,
-      error: "Usuario inválido",
-    };
-  }
-
-  // ==========================================================
-  // API INTERNA - Usar ruta relativa (funciona en Vercel)
-  // ==========================================================
-
-  const apiUrl =
-    snapshotId
-      ? `/api/facebook?user=${encodeURIComponent(cleanUsername)}&snapshot=${encodeURIComponent(snapshotId)}`
-      : `/api/facebook?user=${encodeURIComponent(cleanUsername)}`;
-
-  console.log(
-    "[Facebook] Consultando:",
-    apiUrl
-  );
-
-  // ==========================================================
-  // PETICIÓN
-  // ==========================================================
-
-  const response =
-    await fetch(apiUrl, {
-      method: "GET",
-
-      headers: {
-        Accept:
-          "application/json",
-      },
-
-      cache: "no-store",
-    });
-
-  const text =
-    await response.text();
-
-  let data: any;
-
-  try {
-    data =
-      JSON.parse(text);
-  } catch {
-    throw new Error(
-      "Respuesta inválida de API Facebook"
-    );
-  }
-
-  console.log(
-    "[Facebook] HTTP:",
-    response.status
-  );
-
-  console.log(
-    "[Facebook] Respuesta:",
-    data
-  );
-
-  // ==========================================================
-  // SNAPSHOT PROCESANDO
-  // ==========================================================
-
-  if (
-    data?.status ===
-    "processing"
-  ) {
-    console.log(
-      "[Facebook] Snapshot procesando:",
-      data.snapshotId
-    );
-
-    return {
-      existe: false,
-
       processing: true,
-
-      snapshotId:
-        data.snapshotId,
+      snapshotId: result.snapshotId ?? undefined,
     };
   }
 
-  // ==========================================================
-  // ERROR HTTP
-  // ==========================================================
-
-  if (!response.ok) {
-    throw new Error(
-      data?.error ||
-        `Facebook API HTTP ${response.status}`
-    );
+  if (result.error && result.error !== "Perfil no encontrado") {
+    throw new Error(result.error);
   }
 
-  // ==========================================================
-  // PERFIL NO ENCONTRADO
-  // ==========================================================
-
-  if (
-    data?.success === false
-  ) {
-    if (
-      data?.code ===
-      "dead_page"
-    ) {
-      return {
-        existe: false,
-      };
-    }
-
-    return {
-      existe: false,
-
-      error:
-        data?.error ||
-        "Perfil de Facebook no encontrado",
-    };
+  if (!result.existe) {
+    return { existe: false };
   }
-
-  // ==========================================================
-  // DATOS DEL PERFIL
-  // ==========================================================
-
-  const profile =
-    data?.data;
-
-  if (!profile) {
-    return {
-      existe: false,
-    };
-  }
-
-  console.log(
-    "[Facebook] Perfil encontrado:",
-    {
-      username:
-        profile.username,
-
-      nombre:
-        profile.nombre,
-
-      seguidores:
-        profile.seguidores,
-
-      foto:
-        profile.foto,
-    }
-  );
 
   return {
-    existe:
-      profile.existe !== false,
-
+    existe: true,
     privada: false,
-
-    seguidores:
-      profile.seguidores ??
-      null,
-
-    nombre:
-      profile.nombre ||
-      profile.username ||
-      cleanUsername,
-
-    foto:
-      profile.foto ||
-      null,
+    seguidores: result.seguidores ?? null,
+    nombre: result.nombre ?? result.username ?? user,
+    foto: result.foto ?? null,
   };
 }
 
