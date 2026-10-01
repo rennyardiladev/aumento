@@ -1,60 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 
 export const dynamic = "force-dynamic";
 
 // ============================================================
-// CACHE INTELIGENTE (archivo JSON persistente)
+// CACHE EN MEMORIA (Map) - Compatible con Vercel
 // ============================================================
 
-const CACHE_DIR = path.join(process.cwd(), ".cache");
-const CACHE_FILE = path.join(CACHE_DIR, "facebook.json");
+const cache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 horas
 
-interface CacheEntry {
-  data: any;
-  timestamp: number;
-}
-
-function ensureCacheDir() {
-  if (!fs.existsSync(CACHE_DIR)) {
-    fs.mkdirSync(CACHE_DIR, { recursive: true });
-  }
-}
-
-function loadCache(): Record<string, CacheEntry> {
-  ensureCacheDir();
-  if (!fs.existsSync(CACHE_FILE)) return {};
-  try {
-    const content = fs.readFileSync(CACHE_FILE, "utf-8");
-    return JSON.parse(content);
-  } catch {
-    return {};
-  }
-}
-
-function saveCache(cache: Record<string, CacheEntry>) {
-  ensureCacheDir();
-  fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
-}
-
 function getFromCache(username: string): any | null {
-  const cache = loadCache();
-  const entry = cache[username.toLowerCase()];
+  const entry = cache.get(username.toLowerCase());
   if (!entry) return null;
-  if (Date.now() - entry.timestamp > CACHE_TTL) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL) {
+    cache.delete(username.toLowerCase());
+    return null;
+  }
   console.log("[Facebook] CACHE HIT:", username);
   return entry.data;
 }
 
 function setCache(username: string, data: any) {
-  const cache = loadCache();
-  cache[username.toLowerCase()] = {
-    data,
-    timestamp: Date.now(),
-  };
-  saveCache(cache);
+  cache.set(username.toLowerCase(), { data, timestamp: Date.now() });
   console.log("[Facebook] CACHE SET:", username);
 }
 
