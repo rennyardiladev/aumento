@@ -42,10 +42,10 @@ async function instagram(
     return { existe: false, error: "Usuario inválido" };
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  // Usar ruta relativa para llamadas internas (funciona en Vercel)
   const apiUrl = snapshotId
-    ? `${baseUrl}/api/instagram?user=${encodeURIComponent(cleanUsername)}&snapshot=${encodeURIComponent(snapshotId)}`
-    : `${baseUrl}/api/instagram?user=${encodeURIComponent(cleanUsername)}`;
+    ? `/api/instagram?user=${encodeURIComponent(cleanUsername)}&snapshot=${encodeURIComponent(snapshotId)}`
+    : `/api/instagram?user=${encodeURIComponent(cleanUsername)}`;
 
   console.log("[Instagram] Consultando:", apiUrl);
 
@@ -131,19 +131,10 @@ async function tiktok(
     };
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    "http://localhost:3000";
-
+  // Usar ruta relativa para llamadas internas (funciona en Vercel)
   const apiUrl = snapshotId
-    ? `${baseUrl}/api/tiktok?user=${encodeURIComponent(
-        cleanUsername
-      )}&snapshot=${encodeURIComponent(
-        snapshotId
-      )}`
-    : `${baseUrl}/api/tiktok?user=${encodeURIComponent(
-        cleanUsername
-      )}`;
+    ? `/api/tiktok?user=${encodeURIComponent(cleanUsername)}&snapshot=${encodeURIComponent(snapshotId)}`
+    : `/api/tiktok?user=${encodeURIComponent(cleanUsername)}`;
 
   console.log(
     "[TikTok] Consultando:",
@@ -673,23 +664,13 @@ async function facebook(
   }
 
   // ==========================================================
-  // API INTERNA
+  // API INTERNA - Usar ruta relativa (funciona en Vercel)
   // ==========================================================
-
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    "http://localhost:3000";
 
   const apiUrl =
     snapshotId
-      ? `${baseUrl}/api/facebook?user=${encodeURIComponent(
-          cleanUsername
-        )}&snapshot=${encodeURIComponent(
-          snapshotId
-        )}`
-      : `${baseUrl}/api/facebook?user=${encodeURIComponent(
-          cleanUsername
-        )}`;
+      ? `/api/facebook?user=${encodeURIComponent(cleanUsername)}&snapshot=${encodeURIComponent(snapshotId)}`
+      : `/api/facebook?user=${encodeURIComponent(cleanUsername)}`;
 
   console.log(
     "[Facebook] Consultando:",
