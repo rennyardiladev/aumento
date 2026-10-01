@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { PLAT, PLAT_KEYS, PAQUETES, USUARIO_RE, type Plat, type Paquete, type Perfil } from "@/lib/plataformas";
+import { PLAT, PAQUETES, USUARIO_RE, type Plat, type Paquete } from "@/lib/plataformas";
+import { consultarPerfil } from "@/app/actions/perfil";
 import { CFG } from "@/lib/config";
-import { Logos, NequiLogo, PayPalLogo } from "./Logos";
 import { Hero } from "./Hero";
 import { Header } from "./Header";
 import { UserPreview } from "./UserPreview";
@@ -11,7 +11,7 @@ import { PaymentCard } from "./PaymentCard";
 import Footer from "./Footer";
 
 type Metodo = "nequi" | "paypal";
-type Resp = Perfil & { error?: string; status?: "processing" | "ready"; snapshotId?: string; processing?: boolean; plataforma?: string; usuario?: string; message?: string; success?: boolean; running_time?: number };
+type Resp = Awaited<ReturnType<typeof consultarPerfil>>;
 const fmt = (n: number) => n.toLocaleString("es-CO");
 
 export default function Home() {
@@ -21,7 +21,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [polling, setPolling] = useState(false);
   const [progress, setProgress] = useState<number | null>(null);
-  const [perfil, setPerfil] = useState<Perfil | null>(null);
+  const [perfil, setPerfil] = useState<Resp | null>(null);
   const [err, setErr] = useState("");
   const [sel, setSel] = useState<Paquete | null>(null);
   const [pago, setPago] = useState(false);
@@ -77,10 +77,9 @@ export default function Home() {
       await new Promise(resolve => setTimeout(resolve, delayMs));
 
       try {
-        const res = await fetch(`/api/perfil?plataforma=${plataforma}&usuario=${encodeURIComponent(user)}&snapshot=${encodeURIComponent(snapshotId)}`);
-        const data = (await res.json()) as Resp;
+        const data = await consultarPerfil(plataforma, user, snapshotId);
 
-        if (data.status === "processing") {
+        if (data.processing) {
           // Calcular progreso estimado basado en running_time de Bright Data
           // running_time viene en milisegundos, asumimos ~60s típico = 100%
           const runningTime = data.running_time || 0;
@@ -91,7 +90,7 @@ export default function Home() {
         }
 
         setProgress(100);
-        if (data.success !== false && data.existe !== false) {
+        if (data.error === undefined && data.existe !== false) {
           onComplete(data);
           return;
         }
@@ -99,7 +98,7 @@ export default function Home() {
         setProgress(null);
         onError(data.error || "Perfil no encontrado");
         return;
-      } catch (err) {
+      } catch {
         setProgress(null);
         onError("Error de conexión");
         return;
@@ -141,16 +140,15 @@ export default function Home() {
       setBtnProgress(0);
     }, timeoutMs);
 
-    try {
-      const r = await fetch(`/api/perfil?plataforma=${plat}&usuario=${encodeURIComponent(u)}`);
-      const d = (await r.json()) as Resp;
+try {
+      const d = await consultarPerfil(plat, u);
 
       clearInterval(progressInterval);
       clearTimeout(timeoutId);
       setBtnProgress(100);
 
       // Facebook/TikTok/Instagram async: primera respuesta es processing
-      if (d.status === "processing" && d.snapshotId && (plat === "facebook" || plat === "tiktok" || plat === "instagram")) {
+      if (d.processing && d.snapshotId && (plat === "facebook" || plat === "tiktok" || plat === "instagram")) {
         setLoading(false);
         setPolling(true);
 

@@ -27,6 +27,7 @@ interface InstagramResult extends Perfil {
   processing?: boolean;
   snapshotId?: string | null;
   error?: string;
+  running_time?: number;
 }
 
 async function instagram(
@@ -40,6 +41,7 @@ async function instagram(
       existe: false,
       processing: true,
       snapshotId: result.snapshotId ?? undefined,
+      running_time: result.running_time ?? 0,
     };
   }
 
@@ -72,6 +74,7 @@ interface TikTokResult
   processing?: boolean;
   snapshotId?: string | null;
   error?: string;
+  running_time?: number;
 }
 
 async function tiktok(
@@ -85,6 +88,7 @@ async function tiktok(
       existe: false,
       processing: true,
       snapshotId: result.snapshotId ?? undefined,
+      running_time: result.running_time ?? 0,
     };
   }
 
@@ -469,6 +473,7 @@ interface FacebookResult
   processing?: boolean;
   snapshotId?: string | null;
   error?: string;
+  running_time?: number;
 }
 
 async function facebook(
@@ -482,6 +487,7 @@ async function facebook(
       existe: false,
       processing: true,
       snapshotId: result.snapshotId ?? undefined,
+      running_time: result.running_time ?? 0,
     };
   }
 
