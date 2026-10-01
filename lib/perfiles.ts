@@ -15,14 +15,9 @@ import {
   getFacebookProfile,
 } from "@/app/actions/facebook";
 
-// ============================================================
-// CONFIGURACIÓN
-// ============================================================
-
-const UA =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-  "AppleWebKit/537.36 (KHTML, like Gecko) " +
-  "Chrome/124.0 Safari/537.36";
+import {
+  getSpotifyProfile,
+} from "@/app/actions/spotify";
 
 // ============================================================
 // INSTAGRAM / BRIGHT DATA (ASYNC) - Server Action
@@ -439,40 +434,30 @@ async function youtube(
 }
 
 // ============================================================
-// SPOTIFY (oEmbed - sin credenciales)
+// SPOTIFY (oEmbed - sin credenciales) - Server Action
 // ============================================================
-
-function meta(html: string, property: string): string | null {
-  const re = new RegExp(`<meta[^>]+property=["']${property}["'][^>]+content=["']([^"']+)["']`, "i");
-  const m = html.match(re);
-  return m?.[1] ?? null;
-}
 
 async function spotify(
   q: string,
   _snapshotId?: string
 ): Promise<Perfil> {
-  const url = q.split("?")[0];
-  const r = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`, { cache: "no-store" });
-  if (r.status === 404) return { existe: false };
-  let nombre: string | null = null;
-  let foto: string | null = null;
-  if (r.ok) {
-    const d = await r.json();
-    nombre = d.title ?? null;
-    foto = d.thumbnail_url ?? null;
+  const result = await getSpotifyProfile(q);
+  
+  if (result.error && result.error !== "Perfil no encontrado") {
+    throw new Error(result.error);
   }
-  if (!nombre || !foto) {
-    const p = await fetch(url, { headers: { "User-Agent": UA, "Accept-Language": "es" }, cache: "no-store" });
-    if (p.status === 404) return { existe: false };
-    if (p.ok) {
-      const html = await p.text();
-      foto ??= meta(html, "og:image");
-      nombre ??= meta(html, "og:title");
-    }
+
+  if (!result.existe) {
+    return { existe: false };
   }
-  if (!nombre) throw new Error("spotify");
-  return { existe: true, privada: false, seguidores: null, nombre, foto };
+
+  return {
+    existe: true,
+    privada: false,
+    seguidores: null,
+    nombre: result.nombre ?? undefined,
+    foto: result.foto ?? undefined,
+  };
 }
 
 // ============================================================
