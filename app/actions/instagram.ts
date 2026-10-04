@@ -27,6 +27,7 @@ export interface InstagramResult {
   username?: string;
   externalUrl?: string;
   provider?: string;
+  running_time?: number;
 }
 
 // --- Caché simple en memoria ---
@@ -304,8 +305,9 @@ async function checkBrightDataSnapshot(snapshotId: string, username: string) {
   if (!response.ok) throw new Error("Progress HTTP error");
 
   const status = String(data?.status ?? data?.state ?? "").toLowerCase();
+  const runningTime = data?.running_time ?? data?.elapsed_time ?? 0;
   if (["running", "pending", "processing", "starting", "created", "queued", ""].includes(status)) {
-    return { status: "processing" as const };
+    return { status: "processing" as const, running_time: runningTime };
   }
   if (["failed", "error", "cancelled"].includes(status)) throw new Error("Bright Data failed");
 
@@ -315,7 +317,7 @@ async function checkBrightDataSnapshot(snapshotId: string, username: string) {
   });
   const downloadData = await leerJson(download);
   const profile = encontrarPerfil(downloadData, username, "BrightData");
-  return profile ? { status: "ready" as const, data: profile } : { status: "processing" as const };
+  return profile ? { status: "ready" as const, data: profile, running_time: runningTime } : { status: "processing" as const, running_time: runningTime };
 }
 
 async function getFromBrightData(username: string, snapshotId?: string): Promise<InstagramResult> {
@@ -324,8 +326,12 @@ async function getFromBrightData(username: string, snapshotId?: string): Promise
   try {
     if (snapshotId) {
       const res = await checkBrightDataSnapshot(snapshotId, username);
-      if (res.status === "ready" && "data" in res && res.data) return res.data;
-      return { existe: false, processing: true, snapshotId, username };
+      if (res.status === "ready" && "data" in res && res.data) {
+        const result = { ...res.data };
+        if (res.running_time) result.running_time = res.running_time;
+        return result;
+      }
+      return { existe: false, processing: true, snapshotId, username, running_time: res.running_time ?? 0 };
     }
 
     const scrapeUrl = `${BRIGHTDATA_API}/datasets/v3/scrape?dataset_id=${encodeURIComponent(
@@ -349,10 +355,17 @@ async function getFromBrightData(username: string, snapshotId?: string): Promise
     if (!response.ok) return { existe: false, error: "Bright Data HTTP Error" };
 
     const profile = encontrarPerfil(data, username, "BrightData");
-    if (profile) return profile;
+    if (profile) {
+      const result = { ...profile };
+      if (data?.running_time) result.running_time = data.running_time;
+      return result;
+    }
 
     const newSnapshotId = data?.snapshot_id ?? data?.snapshotId;
-    if (newSnapshotId) return { existe: false, processing: true, snapshotId: newSnapshotId, username };
+    if (newSnapshotId) {
+      const runningTime = data?.running_time ?? 0;
+      return { existe: false, processing: true, snapshotId: newSnapshotId, username, running_time: runningTime };
+    }
 
     return { existe: false, processing: true, snapshotId: null, username };
   } catch (err) {
