@@ -1,10 +1,19 @@
 "use server";
 
-import { NextResponse } from "next/server";
-
+// --- CONFIGURACIÓN DE APIs (todas desde .env, sin valores por defecto) ---
 const BRIGHTDATA_API_KEY = process.env.BRIGHTDATA_API_KEY;
+const HASDATA_API_KEY = process.env.HASDATA_API_KEY;
+const SOCIALCRAWL_API_KEY = process.env.SOCIALCRAWL_API_KEY;
+const PROFILEQUERY_TOKEN = process.env.PROFILEQUERY_TOKEN;
+const APIFY_TOKEN = process.env.APIFY_TOKEN;
+const ENSEMBLEDATA_TOKEN = process.env.ENSEMBLEDATA_TOKEN;
+const IG_RAPID_KEY = process.env.IG_RAPID_KEY;
+
 const DATASET_ID = "gd_l1vikfch901nx3by4";
 const BRIGHTDATA_API = "https://api.brightdata.com";
+
+const TIMEOUT_MS = 8000;
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
 export interface InstagramResult {
   existe: boolean;
@@ -17,8 +26,11 @@ export interface InstagramResult {
   snapshotId?: string | null;
   username?: string;
   externalUrl?: string;
-  running_time?: number;
+  provider?: string;
 }
+
+// --- Caché simple en memoria ---
+const cache = new Map<string, { at: number; data: InstagramResult }>();
 
 function cleanIgUsername(value: string): string {
   return value
@@ -27,125 +39,364 @@ function cleanIgUsername(value: string): string {
     .replace(/^@/, "")
     .split("?")[0]
     .split("/")[0]
-    .trim();
+    .trim()
+    .toLowerCase();
 }
 
 async function leerJson(response: Response): Promise<any> {
   const text = await response.text();
   if (!text) return null;
-  try { return JSON.parse(text); } catch { return text; }
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
 }
 
-function normalizarPerfil(profile: any, username: string) {
+// fetch con timeout para que una API lenta no frene la cascada
+function fetchT(url: string, init: RequestInit = {}, ms = TIMEOUT_MS) {
+  return fetch(url, { ...init, cache: "no-store", signal: AbortSignal.timeout(ms) });
+}
+
+function normalizarPerfil(profile: any, username: string, providerName: string): InstagramResult | null {
   if (!profile) return null;
   if (profile.error) {
-    if (profile.error_code === "dead_page") return null;
+    if (profile.error_code === "dead_page" || profile.error === "Page not found") return null;
     throw new Error(profile.error);
   }
+
   return {
     existe: true,
-    username: profile.username ?? profile.user_name ?? profile.handle ?? username,
-    nombre: profile.full_name ?? profile.name ?? profile.display_name ?? username,
-    seguidores: profile.follower_count ?? profile.followers_count ?? profile.edge_followed_by?.count ?? profile.followers ?? 0,
-    foto: profile.profile_image_link ?? profile.profile_pic_url_hd ?? profile.profile_pic_url ?? profile.hd_profile_pic_url_info?.url ?? profile.hd_profile_pic_url_info ?? profile.profile_photo ?? profile.profile_picture_url ?? profile.profile_picture ?? profile.avatar_url ?? profile.image_url ?? "",
-    privada: Boolean(profile.is_private ?? profile.private_account ?? false),
+    username: profile.username ?? profile.user_name ?? profile.handle ?? profile.ownerUsername ?? username,
+    nombre: profile.fullName ?? profile.display_name ?? profile.full_name ?? profile.name ?? username,
+    seguidores:
+      profile.followersCount ??
+      profile.followers ??
+      profile.follower_count ??
+      profile.followers_count ??
+      profile.edge_followed_by?.count ??
+      0,
+    foto:
+      profile.profilePicUrl ??
+      profile.avatar_url ??
+      profile.profile_pic_url ??
+      profile.profilePicUrlHD ??
+      profile.profile_pic_url_hd ??
+      "",
+    privada: Boolean(profile.private ?? profile.is_private ?? profile.private_account ?? profile.isPrivate ?? false),
     externalUrl: `https://www.instagram.com/${username}/`,
+    provider: providerName,
   };
 }
 
-function encontrarPerfil(data: any, username: string) {
+function encontrarPerfil(data: any, username: string, providerName: string): InstagramResult | null {
   if (!data) return null;
-  if (Array.isArray(data)) return normalizarPerfil(data[0], username);
-  if (Array.isArray(data?.data)) return normalizarPerfil(data.data[0], username);
-  if (data?.data && typeof data.data === "object") return normalizarPerfil(data.data, username);
-  if (data?.profile) return normalizarPerfil(data.profile, username);
-  if (data?.username || data?.user_name || data?.full_name || data?.follower_count) return normalizarPerfil(data, username);
+  if (Array.isArray(data)) return normalizarPerfil(data[0], username, providerName);
+  if (data?.username && (data?.followersCount !== undefined || data?.fullName !== undefined)) {
+    return normalizarPerfil(data, username, providerName);
+  }
+  if (data?.author) return normalizarPerfil(data.author, username, providerName);
+  if (Array.isArray(data?.data)) return normalizarPerfil(data.data[0], username, providerName);
+  if (data?.data && typeof data.data === "object") {
+    if (data.data.author) return normalizarPerfil(data.data.author, username, providerName);
+    return normalizarPerfil(data.data, username, providerName);
+  }
+  if (data?.profile) return normalizarPerfil(data.profile, username, providerName);
+  if (data?.username || data?.user_name || data?.full_name || data?.followers || data?.display_name || data?.fullName) {
+    return normalizarPerfil(data, username, providerName);
+  }
   return null;
 }
 
-async function checkSnapshot(snapshotId: string) {
-  const monitorUrl = `${BRIGHTDATA_API}/datasets/v3/progress/${encodeURIComponent(snapshotId)}`;
-  const response = await fetch(monitorUrl, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${BRIGHTDATA_API_KEY}`, Accept: "application/json" },
-    cache: "no-store",
-  });
-  const data = await leerJson(response);
-  if (!response.ok) throw new Error(`Progress HTTP ${response.status}`);
-  const status = String(data?.status ?? data?.state ?? "").toLowerCase();
-  const procesando = ["running", "pending", "processing", "starting", "created", "queued", ""].includes(status);
-  if (procesando) return { status: "processing", runningTime: data?.running_time ?? 0 };
-  if (["failed", "error", "cancelled"].includes(status)) throw new Error("Bright Data failed");
-  const downloadUrl = `${BRIGHTDATA_API}/datasets/v3/snapshot/${encodeURIComponent(snapshotId)}?format=json`;
-  const download = await fetch(downloadUrl, {
-    headers: { Authorization: `Bearer ${BRIGHTDATA_API_KEY}`, Accept: "application/json" },
-    cache: "no-store",
-  });
-  const downloadData = await leerJson(download);
-  const profile = encontrarPerfil(downloadData, "");
-  return profile ? { status: "ready", data: profile } : { status: "processing", runningTime: 0 };
+// ==========================================
+// 0. PROVEEDOR: INSTAGRAM HTML (gratis, sin API)
+// ==========================================
+function decodeJsonString(raw: string): string {
+  try {
+    return JSON.parse(`"${raw}"`);
+  } catch {
+    return raw;
+  }
 }
 
-export async function getInstagramProfile(user: string, snapshotId?: string): Promise<InstagramResult> {
+async function getFromInstagramHtml(username: string): Promise<InstagramResult | null> {
   try {
-    if (!BRIGHTDATA_API_KEY) {
-      return { existe: false, error: "BRIGHTDATA_API_KEY no configurada" };
-    }
-
-    const username = cleanIgUsername(user);
-    if (!username) {
-      return { existe: false, error: "Usuario de Instagram inválido" };
-    }
-
-    const igUrl = `https://www.instagram.com/${username}/`;
-
-    if (snapshotId) {
-      const result = await checkSnapshot(snapshotId);
-      if (result.status === "ready" && result.data) {
-        return result.data;
-      }
-      return { existe: false, processing: true, snapshotId };
-    }
-
-    // Trigger scrape
-    const scrapeUrl = `${BRIGHTDATA_API}/datasets/v3/scrape?dataset_id=${encodeURIComponent(DATASET_ID)}&notify=false&include_errors=true`;
-    const response = await fetch(scrapeUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${BRIGHTDATA_API_KEY}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
+    const response = await fetchT(
+      `https://www.instagram.com/${encodeURIComponent(username)}/`,
+      {
+        method: "GET",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+          Accept: "text/html,application/xhtml+xml",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
       },
-      body: JSON.stringify({ input: [{ url: igUrl }], limit_per_input: 1 }),
-      cache: "no-store",
+      5000
+    );
+
+    if (!response.ok) return null;
+    const html = await response.text();
+
+    const start = html.indexOf('"xig_user_by_username"');
+    if (start === -1) return null; // login wall o bloqueo
+    const block = html.slice(start, start + 6000);
+    const pick = (re: RegExp) => block.match(re)?.[1];
+
+    const seguidoresRaw = pick(/"follower_count":(\d+)/);
+    if (!seguidoresRaw) return null;
+
+    const usernameRaw = pick(/"username":"([^"]+)"/);
+    const nombreRaw = pick(/"full_name":"((?:[^"\\]|\\.)*)"/);
+    const fotoRaw = pick(/"profile_pic_url":"((?:[^"\\]|\\.)*)"/);
+    const privadaRaw = pick(/"is_private":(true|false)/);
+
+    return {
+      existe: true,
+      username: usernameRaw ?? username,
+      nombre: nombreRaw ? decodeJsonString(nombreRaw) : username,
+      seguidores: Number(seguidoresRaw),
+      foto: fotoRaw ? decodeJsonString(fotoRaw) : "",
+      privada: privadaRaw === "true",
+      externalUrl: `https://www.instagram.com/${username}/`,
+      provider: "InstagramHTML",
+    };
+  } catch (err) {
+    console.warn("[InstagramHTML] Falló, pasando al siguiente nivel...", err);
+    return null;
+  }
+}
+
+// ==========================================
+// 1. PROVEEDOR: HASDATA
+// ==========================================
+async function getFromHasData(username: string): Promise<InstagramResult | null> {
+  if (!HASDATA_API_KEY) return null;
+  try {
+    const url = `https://api.hasdata.com/scrape/instagram/profile?handle=${encodeURIComponent(username)}`;
+    const response = await fetchT(url, {
+      method: "GET",
+      headers: { "x-api-key": HASDATA_API_KEY, "Content-Type": "application/json" },
     });
+    if (!response.ok) return null;
+    const data = await leerJson(response);
+    return encontrarPerfil(data, username, "HasData");
+  } catch (err) {
+    console.warn("[HasData] Falló, pasando al siguiente nivel...", err);
+    return null;
+  }
+}
+
+// ==========================================
+// 2. PROVEEDOR: SOCIALCRAWL
+// ==========================================
+async function getFromSocialCrawl(username: string): Promise<InstagramResult | null> {
+  if (!SOCIALCRAWL_API_KEY) return null;
+  try {
+    const url = `https://www.socialcrawl.dev/v1/instagram/profile?handle=${encodeURIComponent(username)}`;
+    const response = await fetchT(url, {
+      method: "GET",
+      headers: { "x-api-key": SOCIALCRAWL_API_KEY, Accept: "application/json" },
+    });
+    if (!response.ok) return null;
+    const data = await leerJson(response);
+    return encontrarPerfil(data?.data ?? data, username, "SocialCrawl");
+  } catch (err) {
+    console.warn("[SocialCrawl] Falló, pasando al siguiente nivel...", err);
+    return null;
+  }
+}
+
+// ==========================================
+// 3. PROVEEDOR: PROFILEQUERY
+// ==========================================
+async function getFromProfileQuery(username: string): Promise<InstagramResult | null> {
+  if (!PROFILEQUERY_TOKEN) return null;
+  try {
+    const url = `https://api.profilequery.com/v1/profile?handle=${encodeURIComponent(username)}`;
+    const response = await fetchT(url, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${PROFILEQUERY_TOKEN}`, Accept: "application/json" },
+    });
+    if (!response.ok) return null;
+    const data = await leerJson(response);
+    return encontrarPerfil(data?.data ?? data, username, "ProfileQuery");
+  } catch (err) {
+    console.warn("[ProfileQuery] Falló, pasando al siguiente nivel...", err);
+    return null;
+  }
+}
+
+// ==========================================
+// 4. PROVEEDOR: APIFY
+// ==========================================
+async function getFromApify(username: string): Promise<InstagramResult | null> {
+  if (!APIFY_TOKEN) return null;
+  try {
+    const url = `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
+    const response = await fetchT(
+      url,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usernames: [username] }),
+      },
+      20000 // Apify tarda más
+    );
+    if (!response.ok) return null;
+    const data = await leerJson(response);
+    return encontrarPerfil(data, username, "Apify");
+  } catch (err) {
+    console.warn("[Apify] Falló, pasando al siguiente...", err);
+    return null;
+  }
+}
+
+// ==========================================
+// 5. PROVEEDOR: RAPID API
+// ==========================================
+async function getFromRapidApi(username: string): Promise<InstagramResult | null> {
+  if (!IG_RAPID_KEY) return null;
+  try {
+    const host = "instagram-statistics-api.p.rapidapi.com";
+    const url = `https://${host}/community2?username=${encodeURIComponent(username)}`;
+    const response = await fetchT(url, {
+      method: "GET",
+      headers: { "x-rapidapi-key": IG_RAPID_KEY, "x-rapidapi-host": host },
+    });
+    if (!response.ok) return null;
+    const data = await leerJson(response);
+    return encontrarPerfil(data?.result ?? data?.data ?? data, username, "RapidAPI");
+  } catch (err) {
+    console.warn("[RapidAPI] Falló, pasando al siguiente...", err);
+    return null;
+  }
+}
+
+// ==========================================
+// 6. PROVEEDOR: ENSEMBLEDATA (el más pesado en unidades)
+// ==========================================
+async function getFromEnsembleData(username: string): Promise<InstagramResult | null> {
+  if (!ENSEMBLEDATA_TOKEN) return null;
+  try {
+    const url = `https://ensembledata.com/apis/instagram/user/detailed-info?username=${encodeURIComponent(
+      username
+    )}&token=${ENSEMBLEDATA_TOKEN}`;
+    const response = await fetchT(url, { method: "GET" });
+    if (!response.ok) return null;
+    const data = await leerJson(response);
+    return encontrarPerfil(data?.data ?? data, username, "EnsembleData");
+  } catch (err) {
+    console.warn("[EnsembleData] Falló, pasando al respaldo final...", err);
+    return null;
+  }
+}
+
+// ==========================================
+// 7. PROVEEDOR: BRIGHT DATA (Respaldo Final)
+// ==========================================
+async function checkBrightDataSnapshot(snapshotId: string, username: string) {
+  const monitorUrl = `${BRIGHTDATA_API}/datasets/v3/progress/${encodeURIComponent(snapshotId)}`;
+  const response = await fetchT(monitorUrl, {
+    headers: { Authorization: `Bearer ${BRIGHTDATA_API_KEY}`, Accept: "application/json" },
+  });
+  const data = await leerJson(response);
+  if (!response.ok) throw new Error("Progress HTTP error");
+
+  const status = String(data?.status ?? data?.state ?? "").toLowerCase();
+  if (["running", "pending", "processing", "starting", "created", "queued", ""].includes(status)) {
+    return { status: "processing" as const };
+  }
+  if (["failed", "error", "cancelled"].includes(status)) throw new Error("Bright Data failed");
+
+  const downloadUrl = `${BRIGHTDATA_API}/datasets/v3/snapshot/${encodeURIComponent(snapshotId)}?format=json`;
+  const download = await fetchT(downloadUrl, {
+    headers: { Authorization: `Bearer ${BRIGHTDATA_API_KEY}`, Accept: "application/json" },
+  });
+  const downloadData = await leerJson(download);
+  const profile = encontrarPerfil(downloadData, username, "BrightData");
+  return profile ? { status: "ready" as const, data: profile } : { status: "processing" as const };
+}
+
+async function getFromBrightData(username: string, snapshotId?: string): Promise<InstagramResult> {
+  if (!BRIGHTDATA_API_KEY) return { existe: false, error: "BRIGHTDATA_API_KEY no configurada" };
+
+  try {
+    if (snapshotId) {
+      const res = await checkBrightDataSnapshot(snapshotId, username);
+      if (res.status === "ready" && "data" in res && res.data) return res.data;
+      return { existe: false, processing: true, snapshotId, username };
+    }
+
+    const scrapeUrl = `${BRIGHTDATA_API}/datasets/v3/scrape?dataset_id=${encodeURIComponent(
+      DATASET_ID
+    )}&notify=false&include_errors=true`;
+    const response = await fetchT(
+      scrapeUrl,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${BRIGHTDATA_API_KEY}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({ input: [{ url: `https://www.instagram.com/${username}/` }], limit_per_input: 1 }),
+      },
+      30000
+    );
 
     const data = await leerJson(response);
+    if (!response.ok) return { existe: false, error: "Bright Data HTTP Error" };
 
-    if (!response.ok) {
-      return { existe: false, error: `Bright Data HTTP ${response.status}`, processing: false };
-    }
+    const profile = encontrarPerfil(data, username, "BrightData");
+    if (profile) return profile;
 
-    if (data?.error?.error_code === "dead_page") {
-      return { existe: false, error: "Perfil no encontrado", processing: false };
-    }
-
-    // Datos directos
-    let profile = encontrarPerfil(data, username);
-    if (profile) {
-      return profile;
-    }
-
-    // Snapshot async
     const newSnapshotId = data?.snapshot_id ?? data?.snapshotId;
-    if (newSnapshotId) {
-      return { existe: false, processing: true, snapshotId: newSnapshotId };
-    }
+    if (newSnapshotId) return { existe: false, processing: true, snapshotId: newSnapshotId, username };
 
-    return { existe: false, processing: true, snapshotId: null };
-
-  } catch (error) {
-    console.error("[Instagram] ERROR:", error);
-    return { existe: false, error: error instanceof Error ? error.message : String(error), processing: false };
+    return { existe: false, processing: true, snapshotId: null, username };
+  } catch (err) {
+    console.warn("[BrightData] Falló", err);
+    return { existe: false, error: "No se pudo consultar el perfil" };
   }
+}
+
+// ==========================================
+// FUNCIÓN PRINCIPAL (EL ENRUTADOR EN CASCADA)
+// ==========================================
+export async function getInstagramProfile(user: string, snapshotId?: string): Promise<InstagramResult> {
+  const username = cleanIgUsername(user);
+  if (!username) return { existe: false, error: "Usuario de Instagram inválido" };
+
+  if (snapshotId) {
+    return await getFromBrightData(username, snapshotId);
+  }
+
+  // Caché
+  const cached = cache.get(username);
+  if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
+    return cached.data;
+  }
+
+  const providers: Array<[string, (u: string) => Promise<InstagramResult | null>]> = [
+    ["InstagramHTML", getFromInstagramHtml],
+    ["HasData", getFromHasData],
+    ["SocialCrawl", getFromSocialCrawl],
+    ["ProfileQuery", getFromProfileQuery],
+    ["Apify", getFromApify],
+    ["RapidAPI", getFromRapidApi],
+    ["EnsembleData", getFromEnsembleData],
+  ];
+
+  for (const [name, fn] of providers) {
+    const result = await fn(username);
+    if (result?.existe) {
+      console.log(`[Router] Éxito con ${name}`);
+      cache.set(username, { at: Date.now(), data: result });
+      return result;
+    }
+  }
+
+  console.log("[Router] Las APIs rápidas fallaron. Usando Bright Data...");
+  return await getFromBrightData(username);
 }

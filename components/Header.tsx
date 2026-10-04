@@ -1,6 +1,8 @@
 "use client";
 
 import { PLAT, type Plat } from "@/lib/plataformas";
+import { useState } from "react";
+import { FAQModal } from "./FAQModal";
 
 interface HeaderProps {
   activePlat: Plat;
@@ -48,33 +50,68 @@ const metricsByPlatform: Record<Plat, Array<keyof typeof metricIcons>> = {
   spotify: ["seguidores", "likes", "comentarios", "visualizaciones"],
 };
 
+const FAQIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" width="22" height="22">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+    <path d="M12 17h.01" />
+  </svg>
+);
+
+const BlogIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" width="22" height="22">
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+  </svg>
+);
+
 export function Header({ activePlat, className }: HeaderProps) {
   const metrics = metricsByPlatform[activePlat] || ["seguidores", "likes", "comentarios", "visualizaciones"];
   const current = PLAT[activePlat];
+  const [showFAQ, setShowFAQ] = useState(false);
 
   return (
-    <header className={`app-header ${className || ""}`} style={{ "--g": current.g, "--acc": current.acc } as React.CSSProperties}>
-      <div className="header-row">
-        <div className="logo-container">
-          <img src="/aumentodeseguidores.webp" alt="Aumento de Seguidores" className="logo-img" />
-        </div>
-        <nav className="metrics-bar" role="tablist" aria-label="Métricas">
-          {metrics.map((metric, i) => (
-            <button
-              key={metric}
-              className={`metric-tab ${i === 0 ? "active" : ""}`}
-              role="tab"
-              aria-selected={i === 0}
-              aria-controls={`panel-${metric}`}
-              id={`tab-${metric}`}
-              onClick={() => {}}
-            >
-              <span className="metric-icon">{metricIcons[metric]}</span>
-              <span className="metric-label">{metric.charAt(0).toUpperCase() + metric.slice(1)}</span>
-            </button>
-          ))}
-        </nav>
-      </div>
-    </header>
+    <>
+      <header className={`app-header ${className || ""}`} style={{ "--g": current.g, "--acc": current.acc } as React.CSSProperties}>
+        <div className="header-row">
+          <div className="logo-container">
+            <img src="/aumentodeseguidores.webp" alt="Aumento de Seguidores" className="logo-img" />
+          </div>
+          <nav className="metrics-bar" role="tablist" aria-label="Métricas">
+            {metrics.map((metric, i) => (
+              <button
+                key={metric}
+                className={`metric-tab ${i === 0 ? "active" : ""}`}
+                role="tab"
+                aria-selected={i === 0}
+                aria-controls={`panel-${metric}`}
+                id={`tab-${metric}`}
+                onClick={() => {}}
+              >
+                <span className="metric-icon">{metricIcons[metric]}</span>
+                <span className="metric-label">{metric.charAt(0).toUpperCase() + metric.slice(1)}</span>
+              </button>
+            ))}
+</nav>
+           <button
+             className="faq-btn"
+             onClick={() => window.location.href = "/blog"}
+             aria-label="Blog"
+             title="Blog"
+           >
+             <BlogIcon />
+           </button>
+           <button
+             className="faq-btn"
+             onClick={() => setShowFAQ(true)}
+             aria-label="Preguntas frecuentes"
+             title="Preguntas frecuentes"
+           >
+             <FAQIcon />
+           </button>
+         </div>
+      </header>
+      <FAQModal open={showFAQ} onClose={() => setShowFAQ(false)} />
+    </>
   );
 }

@@ -23,7 +23,7 @@ export interface Paquete { n: number; p: number } // cantidad y precio en COP
 export const PAQUETES: Paquete[] = [
   { n: 100, p: 9900 },
   { n: 500, p: 29900 },
-  { n: 1000, p: 49900 },
+  { n: 1000, p: 39900 },
   { n: 5000, p: 189900 },
 ];
 
