@@ -837,19 +837,7 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ sl
       <main style={{ maxWidth: "800px", margin: "0 auto", padding: "32px 16px 60px" }}>
         <Link
           href="/blog"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            color: "var(--mu)",
-            fontSize: "14px",
-            fontWeight: 500,
-            marginBottom: "24px",
-            textDecoration: "none",
-            transition: "color 0.2s ease",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = "var(--acc)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = "var(--mu)"; }}
+          className="back-to-blog"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5" />
