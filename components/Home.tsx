@@ -80,8 +80,6 @@ export default function Home() {
         const data = await consultarPerfil(plataforma, user, snapshotId);
 
         if (data.processing) {
-          // Calcular progreso estimado basado en running_time de Bright Data
-          // running_time viene en milisegundos, asumimos ~60s típico = 100%
           const runningTime = data.running_time || 0;
           const estimatedProgress = Math.min(95, Math.round((runningTime / 60000) * 100));
           setProgress(estimatedProgress);
@@ -110,16 +108,23 @@ export default function Home() {
   }, []);
 
   async function verificar() {
-    const u = input.trim().replace(/^@/, "");
+    // 1. Quitamos la arroba inicial, eliminamos TODOS los espacios (tanto al rededor como en medio) y pasamos a minúsculas
+    const u = input.trim().replace(/^@/, "").replace(/\s+/g, "").toLowerCase();
+    
+    // Actualizamos el input visualmente para que el usuario note cómo quedó unido
+    setInput(u);
+
     setPerfil(null); setSel(null); setErr(""); setPolling(false); setBtnProgress(0);
     
     // Permitir URLs en Instagram, TikTok, YouTube, Facebook y Spotify
     const esURL = u.includes("instagram.com") || u.includes("tiktok.com") || u.includes("youtube.com") || u.includes("facebook.com") || u.includes("open.spotify.com");
     const esSpotifyID = plat === "spotify" && /^[a-zA-Z0-9]{22}$/.test(u);
+    
     if (!esURL && !esSpotifyID && !USUARIO_RE.test(u)) {
       setErr("Usuario no válido. Solo letras, números, punto, guion y guion bajo.");
       return;
     }
+    
     setLoading(true);
     setBtnProgress(5);
 
@@ -140,7 +145,7 @@ export default function Home() {
       setBtnProgress(0);
     }, timeoutMs);
 
-try {
+    try {
       const d = await consultarPerfil(plat, u);
 
       clearInterval(progressInterval);
@@ -164,7 +169,7 @@ try {
             setUsuario(u);
             setPerfil(finalData);
           },
-          (error) => {
+          () => {
             setPolling(false);
             setManualMode(true);
             setErr("");
@@ -173,14 +178,17 @@ try {
         return;
       }
 
-      // Respuesta directa (Instagram, YouTube, Spotify, o TikTok/Facebook con datos directos)
+      // Respuesta directa
       if (d.error) {
         setManualMode(true);
         setErr("");
       } else if (!d.existe) {
         setManualMode(true);
         setErr("");
-      } else { setUsuario(u); setPerfil(d); }
+      } else { 
+        setUsuario(u); 
+        setPerfil(d); 
+      }
     } catch {
       clearInterval(progressInterval);
       clearTimeout(timeoutId);
@@ -196,7 +204,6 @@ try {
     const u = manualLink.trim();
     if (!u) return;
     setManualMode(false);
-    // Usar el link directo sin verificar - continuar al proceso de paquetes
     setUsuario(u);
     setPerfil({ existe: true, privada: false, seguidores: null, nombre: undefined, foto: null });
   }
@@ -396,19 +403,19 @@ try {
             </div>
 
             <label className="sm" htmlFor="ct" style={{ marginTop: 6, marginBottom: '6px', display: 'block' }}>
-  Tu WhatsApp (solo este dato, para enviarte la confirmación)
-</label>
+              Tu WhatsApp (solo este dato, para enviarte la confirmación)
+            </label>
             <input 
-  id="ct" 
-  type="tel" 
-  value={tel} 
-  placeholder="+57 300 000 0000" 
-  style={telErr 
-    ? { borderColor: "#dc3c3c", marginBottom: "16px", display: "block", width: "100%" } 
-    : { marginBottom: "16px", display: "block", width: "100%" }
-  }
-  onChange={(e) => setTel(e.target.value)} 
-/>
+              id="ct" 
+              type="tel" 
+              value={tel} 
+              placeholder="+57 300 000 0000" 
+              style={telErr 
+                ? { borderColor: "#dc3c3c", marginBottom: "16px", display: "block", width: "100%" } 
+                : { marginBottom: "16px", display: "block", width: "100%" }
+              }
+              onChange={(e) => setTel(e.target.value)} 
+            />
 
             {!orden ? (
               <button className="btn-primary" onClick={confirmar}>Confirmar pedido</button>

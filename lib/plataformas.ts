@@ -21,10 +21,10 @@ export const PLAT_KEYS = Object.keys(PLAT) as Plat[];
 
 export interface Paquete { n: number; p: number } // cantidad y precio en COP
 export const PAQUETES: Paquete[] = [
-  { n: 100, p: 9900 },
-  { n: 500, p: 29900 },
-  { n: 1000, p: 39900 },
-  { n: 5000, p: 189900 },
+  { n: 100, p: 5900 },
+  { n: 500, p: 15000 },
+  { n: 1000, p: 3000 },
+  { n: 5000, p: 120000 },
 ];
 
 export interface Perfil {

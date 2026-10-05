@@ -420,9 +420,388 @@ const articles: Record<string, Article> = {
   },
 };
 
+// Additional articles for marketing blog
+const moreArticles: Record<string, Article> = {
+  "facebook-ads-para-creadores": {
+    slug: "facebook-ads-para-creadores",
+    title: "Facebook Ads para Creadores: Guía de Campañas Rentables 2024",
+    excerpt: "Aprende a crear campañas de Facebook Ads que conviertan: estructura de campañas, audiencias, creativos y optimización de ROAS.",
+    category: "Facebook Ads",
+    readTime: "10 min",
+    date: "2024-01-20",
+    seoKeywords: "facebook ads creadores, campañas facebook ads, roas facebook",
+    content: `
+      <h2>Estructura de Campaña (CBO)</h2>
+      <p>Usa Campaign Budget Optimization para que Facebook distribuya automáticamente:</p>
+      <ul>
+        <li><strong>Campaña:</strong> Objetivo (Conversiones, Tráfico, Engagement)</li>
+        <li><strong>Conjunto de anuncios:</strong> Audiencia, presupuesto, ubicaciones</li>
+        <li><strong>Anuncio:</strong> Creativo + copy + CTA</li>
+      </ul>
+
+      <h2>Audiencias que Funcionan</h2>
+      <ol>
+        <li><strong>Personalizada:</strong> Visitantes web, engagement previo, lista email</li>
+        <li><strong>Similar (Lookalike):</strong> 1% de tu país basado en clientes</li>
+        <li><strong>Interés:</strong> Nicho amplio (solo si no tienes datos)</li>
+      </ol>
+
+      <h2>Creativos que Convierten</h2>
+      <ul>
+        <li>Video corto (15-30s) con hook en 3s</li>
+        <li>Carrusel de beneficios (no features)</li>
+        <li>Testimonios reales con foto/nombre</li>
+        <li>UGC (contenido de usuario) > Publicidad pulida</li>
+      </ul>
+
+      <h2>Optimización de ROAS</h2>
+      <p>Regla 70/20/10: 70% presupuesto a lo que funciona, 20% testing, 10% nuevas audiencias. No toques anuncios ganadores por 7 días.</p>
+
+      <h2>Pixel y Eventos</h2>
+      <p>Configura Meta Pixel + Conversion API. Trackea: ViewContent, AddToCart, Purchase. Sin datos, no hay optimización.</p>
+    `,
+  },
+  "tiktok-shop-afiliados": {
+    slug: "tiktok-shop-afiliados",
+    title: "TikTok Shop y Afiliados: Cómo Vender sin Inventario",
+    excerpt: "Guía completa para monetizar con TikTok Shop: configuración, selección de productos, contenido que vende y escalado.",
+    category: "TikTok",
+    readTime: "9 min",
+    date: "2024-01-18",
+    seoKeywords: "tiktok shop, afiliados tiktok, vender en tiktok",
+    content: `
+      <h2>Configuración de TikTok Shop</h2>
+      <ul>
+        <li>Cuenta Business verificada</li>
+        <li>Mínimo 1,000 seguidores (en algunos países)</li>
+        <li>Vincular cuenta de TikTok Shop</li>
+        <li>Catálogo de productos (o afiliados de otros vendedores)</li>
+      </ul>
+
+      <h2>Selección de Productos</h2>
+      <p>Busca productos que:</p>
+      <ul>
+        <li>Tengan <strong>impulso de compra</strong> (precio < $50)</li>
+        <li>Resuelvan un problema visible en video</li>
+        <li>Tengan comisión alta (15-30%)</li>
+        <li>Ya vendan bien (ranking de TikTok Shop)</li>
+      </ul>
+
+      <h2>Contenido que Vende</h2>
+      <ol>
+        <li><strong>Demo:</strong> Muestra el producto en uso real</li>
+        <li><strong>Before/After:</strong> Transformación visible</li>
+        <li><strong>Review honesto:</strong> Pros y contras</li>
+        <li><strong>Unboxing:</strong> Reacción genuina</li>
+        <li><strong>Tutorial:</strong> Cómo usarlo</li>
+      </ol>
+
+      <h2>Escalado</h2>
+      <p>Cuando un video vende: réplicalo con variaciones (diferente hook, ángulo, música). Publica 3-5 videos/día del mismo producto.</p>
+
+      <h2>Pagos y Comisiones</h2>
+      <p>TikTok paga semanalmente. Comisión promedio: 10-30% del precio. Los productos digitales pagan más que físicos.</p>
+    `,
+  },
+  "email-marketing-creadores": {
+    slug: "email-marketing-creadores",
+    title: "Email Marketing para Creadores: Construye tu Lista y Vende en Automático",
+    excerpt: "Por qué necesitas una lista de email, lead magnets que convierten, secuencias de bienvenida y automatizaciones de ventas.",
+    category: "Email Marketing",
+    readTime: "8 min",
+    date: "2024-01-16",
+    seoKeywords: "email marketing creadores, lead magnet, automatizacion email",
+    content: `
+      <h2>Por qué Email > Redes Sociales</h2>
+      <p>Tú eres dueño de la lista. Las redes pueden cambiar el algoritmo mañana. Email tiene ROI promedio de $36 por $1 invertido.</p>
+
+      <h2>Lead Magnets que Funcionan</h2>
+      <ul>
+        <li><strong>Checklist:</strong> "Los 10 pasos para X"</li>
+        <li><strong>Plantilla:</strong> "Calendario de contenido editable"</li>
+        <li><strong>Mini-curso:</strong> "5 días para X"</li>
+        <li><strong>Herramienta:</strong> "Calculadora de X"</li>
+        <li><strong>Guía PDF:</strong> "La guía definitiva de X"</li>
+      </ul>
+
+      <h2>Secuencia de Bienvenida (5 emails)</h2>
+      <ol>
+        <li><strong>Día 0:</strong> Entrega lead magnet + historia</li>
+        <li><strong>Día 1:</strong> Valor extra (tip rápido)</li>
+        <li><strong>Día 3:</strong> Caso de éxito / testimonio</li>
+        <li><strong>Día 5:</strong> Soft pitch (producto/servicio)</li>
+        <li><strong>Día 7:</strong> Oferta directa</li>
+      </ol>
+
+      <h2>Herramientas Recomendadas</h2>
+      <ul>
+        <li><strong>Gratis (hasta 500 subs):</strong> MailerLite, Brevo</li>
+        <li><strong>Crecimiento:</strong> ConvertKit, Beehiiv</li>
+        <li><strong>E-commerce:</strong> Klaviyo</li>
+      </ul>
+
+      <h2>Métricas Clave</h2>
+      <p>Open rate > 30%, CTR > 3%, Unsubscribe < 0.5%. Si no cumples, revisa asunto y segmentación.</p>
+    `,
+  },
+  "linkedin-personal-branding": {
+    slug: "linkedin-personal-branding",
+    title: "Personal Branding en LinkedIn: Estrategia para Profesionales y B2B",
+    excerpt: "Optimiza tu perfil, estrategia de contenido, networking y cómo generar leads cualificados en LinkedIn.",
+    category: "LinkedIn",
+    readTime: "7 min",
+    date: "2024-01-14",
+    seoKeywords: "personal branding linkedin, linkedin b2b, generar leads linkedin",
+    content: `
+      <h2>Optimización de Perfil</h2>
+      <ul>
+        <li><strong>Titular:</strong> No solo tu cargo. "Ayudo a X a lograr Y"</li>
+        <li><strong>Banner:</strong> Visual con tu propuesta de valor</li>
+        <li><strong>Acerca de:</strong> Historia + experiencia + CTA</li>
+        <li><strong>Featured:</strong> 3-5 piezas de contenido destacado</li>
+      </ul>
+
+      <h2>Estrategia de Contenido</h2>
+      <p>Publica 3-5 veces/semana. Formatos que funcionan:</p>
+      <ol>
+        <li><strong>Storytelling profesional:</strong> Lecciones aprendidas</li>
+        <li><strong>Listas:</strong> "5 herramientas que uso para X"</li>
+        <li><strong>Opiniones:</strong> Toma de postura en tu industria</li>
+        <li><strong>Casos de estudio:</strong> Resultados con datos</li>
+      </ol>
+
+      <h2>Networking Estratégico</h2>
+      <p>Conecta con 10-20 personas/día en tu nicho. Personaliza el mensaje. Comenta en posts de otros antes de publicar tú.</p>
+
+      <h2>Generación de Leads B2B</h2>
+      <p>Usa LinkedIn Sales Navigator para filtrar por cargo, industria, tamaño de empresa. Secuencia: Conectar → Valor → Reunión.</p>
+
+      <h2>LinkedIn Newsletter</h2>
+      <p>Activa la función de newsletter. Los suscriptores reciben notificación de cada post. Crecimiento orgánico garantizado.</p>
+    `,
+  },
+  "pinterest-trafico-web": {
+    slug: "pinterest-trafico-web",
+    title: "Pinterest para Tráfico Web: SEO Visual que Convierte",
+    excerpt: "Cómo usar Pinterest como motor de búsqueda visual: pines optimizados, tableros, rich pins y estrategia de contenido evergreen.",
+    category: "Pinterest",
+    readTime: "6 min",
+    date: "2024-01-13",
+    seoKeywords: "pinterest trafico web, seo pinterest, marketing pinterest",
+    content: `
+      <h2>Pinterest es un Buscador, no una Red Social</h2>
+      <p>Los pines pueden traer tráfico por 6-12 meses (evergreen). Piensa en keywords, no en likes.</p>
+
+      <h2>Optimización de Pin</h2>
+      <ul>
+        <li><strong>Título:</strong> Keyword principal + beneficio</li>
+        <li><strong>Descripción:</strong> 2-3 oraciones con keywords naturales</li>
+        <li><strong>Imagen:</strong> Vertical 1000x1500, texto legible, contraste alto</li>
+        <li><strong>Link:</strong> Siempre al artículo/producto</li>
+      </ul>
+
+      <h2>Rich Pins</h2>
+      <p>Activa Rich Pins (gratis). Muestran título, descripción y precio automáticamente del tu sitio. Mejoran CTR.</p>
+
+      <h2>Estrategia de Tableros</h2>
+      <p>Crea 5-10 tableros por nicho. Nombra tableros con keywords. Organiza pines por tema para que el algoritmo entienda tu contenido.</p>
+
+      <h2>Frecuencia y Herramientas</h2>
+      <p>5-10 pines/día (incluye repins). Usa Tailwind o Pinterest Business Hub para programar. Analiza qué pines traen más clicks y réplicalos.</p>
+    `,
+  },
+  "shorts-vs-reels-vs-tiktok": {
+    slug: "shorts-vs-reels-vs-tiktok",
+    title: "Shorts vs Reels vs TikTok: Dónde Publicar en 2024",
+    excerpt: "Comparativa completa de los 3 formatos de video corto: algoritmo, monetización, audiencia, herramientas y estrategia multiplataforma.",
+    category: "Video Corto",
+    readTime: "8 min",
+    date: "2024-01-11",
+    seoKeywords: "shorts vs reels vs tiktok, video corto 2024, donde publicar",
+    content: `
+      <h2>Comparativa Rápida</h2>
+      <table style="width:100%; border-collapse:collapse; margin:16px 0;">
+        <thead><tr style="background:var(--bg);"><th style="padding:8px;border:1px solid var(--bd);">Plataforma</th><th style="padding:8px;border:1px solid var(--bd);">Alcance</th><th style="padding:8px;border:1px solid var(--bd);">Monetización</th><th style="padding:8px;border:1px solid var(--bd);">Audiencia</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:8px;border:1px solid var(--bd);">TikTok</td><td style="padding:8px;border:1px solid var(--bd);">Muy alto (FYP)</td><td style="padding:8px;border:1px solid var(--bd);">Creator Fund, Shop, Lives</td><td style="padding:8px;border:1px solid var(--bd);">Gen Z + Millennials</td></tr>
+          <tr><td style="padding:8px;border:1px solid var(--bd);">Reels (IG)</td><td style="padding:8px;border:1px solid var(--bd);">Alto (Explore)</td><td style="padding:8px;border:1px solid var(--bd);">Bonuses, collabs, afiliados</td><td style="padding:8px;border:1px solid var(--bd);">Millennials + Gen X</td></tr>
+          <tr><td style="padding:8px;border:1px solid var(--bd);">Shorts (YT)</td><td style="padding:8px;border:1px solid var(--bd);">Alto (Home + Shorts)</td><td style="padding:8px;border:1px solid var(--bd);">YPP Shorts (ads revenue)</td><td style="padding:8px;border:1px solid var(--bd);">Todos los grupos</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Estrategia Multiplataforma</h2>
+      <p>No publiques el mismo video exacto. Adapta:</p>
+      <ul>
+        <li><strong>TikTok:</strong> Sonido trending, texto nativo, hashtags</li>
+        <li><strong>Reels:</strong> Estética cuidada, CTA a bio, sin marca de agua TikTok</li>
+        <li><strong>Shorts:</strong> Título con keyword, miniatura atractiva</li>
+      </ul>
+
+      <h2>Herramientas de Repurposing</h2>
+      <p>Usa Opus Clip, Vizard o CapCut para generar múltiples versiones de un video largo. Elimina marcas de agua antes de cross-postear.</p>
+
+      <h2>Dónde Empezar</h2>
+      <p>Si eres nuevo: TikTok (mayor alcance orgánico). Si tienes producto: Reels (mejor conversión). Si buscas ingresos pasivos: Shorts (monetización directa).</p>
+    `,
+  },
+  "community-management-escalado": {
+    slug: "community-management-escalado",
+    title: "Community Management a Escala: Automatización sin Perder Humanidad",
+    excerpt: "Herramientas y workflows para gestionar comunidades grandes: respuestas automáticas, moderación, CRM social y escalado de equipo.",
+    category: "Community",
+    readTime: "7 min",
+    date: "2024-01-09",
+    seoKeywords: "community management, automatizacion community, gestion comunidad",
+    content: `
+      <h2>Respuestas Automáticas Inteligentes</h2>
+      <p>Configura respuestas rápidas para:</p>
+      <ul>
+        <li>Preguntas frecuentes (precio, envío, horario)</li>
+        <li>Comentarios negativos (empatía + solución)</li>
+        <li>Menciones de marca (gracias + CTA)</li>
+      </ul>
+
+      <h2>Herramientas de Escalado</h2>
+      <ul>
+        <li><strong>Meta Business Suite:</strong> Bandeja unificada IG+FB</li>
+        <li><strong>Sprout Social / Hootsuite:</strong> Escucha social + reportes</li>
+        <li><strong>ManyChat:</strong> Auto-reply en DM de IG/FB</li>
+        <li><strong>Zendesk / Intercom:</strong> Tickets + CRM</li>
+      </ul>
+
+      <h2>Moderación</h2>
+      <p>Define reglas claras: palabras bloqueadas, spam, trolls. Automatiza lo que se puede, pero siempre revisa casos sensibles manualmente.</p>
+
+      <h2>Workflow de Escalado</h2>
+      <ol>
+        <li>Nivel 1: Bot responde FAQs (60-70% de mensajes)</li>
+        <li>Nivel 2: Community manager junior (respuestas estándar)</li>
+        <li>Nivel 3: Senior (casos complejos, crisis)</li>
+        <li>Nivel 4: Manager (estrategia, reportes)</li>
+      </ol>
+
+      <h2>Métricas de Comunidad</h2>
+      <p>Tiempo de respuesta (< 1h), tasa de resolución, NPS de comunidad, crecimiento de menciones positivas.</p>
+    `,
+  },
+  "seo-local-negocios-fisicos": {
+    slug: "seo-local-negocios-fisicos",
+    title: "SEO Local para Negocios Físicos: Domina Google Maps y Atrae Clientes",
+    excerpt: "Optimiza tu ficha de Google Business, reseñas, citations locales, contenido geo-localizado y estrategia de link building local.",
+    category: "SEO Local",
+    readTime: "9 min",
+    date: "2024-01-07",
+    seoKeywords: "seo local, google maps negocio, ficha google business",
+    content: `
+      <h2>Google Business Profile (GBP)</h2>
+      <p>La ficha es el 50% del SEO local. Optimiza:</p>
+      <ul>
+        <li><strong>Categoría principal:</strong> La más específica posible</li>
+        <li><strong>Horario:</strong> Actualizado (incluye festivos)</li>
+        <li><strong>Fotos:</strong> Mínimo 20, sube 1/semana</li>
+        <li><strong>Descripción:</strong> 750 caracteres con keywords locales</li>
+        <li><strong>Productos/Servicios:</strong> Completa cada ítem</li>
+      </ul>
+
+      <h2>Reseñas: El Factor #2</h2>
+      <p>Pide reseñas a cada cliente (QR en mostrador, email post-compra). Responde a TODAS (positivas y negativas). Mínimo 10 reseñas para empezar a rankear.</p>
+
+      <h2>Citations Locales (NAP)</h2>
+      <p>Tu Nombre, Dirección y Teléfono deben ser idénticos en: Google, Facebook, Yelp, directorios locales, cámara de comercio. Inconsistencias = penalización.</p>
+
+      <h2>Contenido Geo-localizado</h2>
+      <p>Blog posts con keywords locales: "mejor [servicio] en [ciudad]". Páginas de servicio por zona. Schema markup LocalBusiness.</p>
+
+      <h2>Link Building Local</h2>
+      <p>Patrocina eventos locales, colabora con medios locales, únete a asociaciones. Un link de un medio local vale más que 100 links genéricos.</p>
+    `,
+  },
+  "content-repurposing-workflow": {
+    slug: "content-repurposing-workflow",
+    title: "Content Repurposing: Workflow para Multiplicar tu Contenido x10",
+    excerpt: "Sistema completo para transformar 1 pieza de contenido en 20+ formatos: video, audio, texto, gráficos para todas las plataformas.",
+    category: "Productividad",
+    readTime: "10 min",
+    date: "2024-01-06",
+    seoKeywords: "content repurposing, reutilizar contenido, workflow contenido",
+    content: `
+      <h2>El Concepto: 1 → 20+</h2>
+      <p>1 video largo (YouTube) se convierte en:</p>
+      <ul>
+        <li>3-5 Shorts/Reels/TikToks</li>
+        <li>10-15 clips para Stories</li>
+        <li>1 artículo de blog (transcripción)</li>
+        <li>5-10 posts de texto (Twitter/LinkedIn)</li>
+        <li>1 carrusel (Instagram/LinkedIn)</li>
+        <li>1 newsletter</li>
+        <li>1 podcast (audio del video)</li>
+        <li>Infografía (pinterest)</li>
+      </ul>
+
+      <h2>Workflow Paso a Paso</h2>
+      <ol>
+        <li><strong>Grabar:</strong> 1 video largo (15-30 min)</li>
+        <li><strong>Transcribir:</strong> Whisper/Descript</li>
+        <li><strong>Clip:</strong> Opus Clip/Vizard (auto-detecta momentos virales)</li>
+        <li><strong>Editar:</strong> CapCut (ajusta formato por plataforma)</li>
+        <li><strong>Publicar:</strong> Programa con Buffer/Later</li>
+      </ol>
+
+      <h2>Herramientas Recomendadas</h2>
+      <ul>
+        <li><strong>Transcripción:</strong> Whisper, Descript, Otter.ai</li>
+        <li><strong>Clips:</strong> Opus Clip, Vizard, Munch</li>
+        <li><strong>Diseño:</strong> Canva, Figma</li>
+        <li><strong>Programación:</strong> Buffer, Later, Metricool</li>
+      </ul>
+
+      <h2>Calendario de Repurposing</h2>
+      <p>Lunes: Video largo. Martes-Miércoles: Clips. Jueves: Artículo. Viernes: Carrusel. Sábado: Newsletter. Domingo: Stories.</p>
+    `,
+  },
+  "web3-social-tokens-creadores": {
+    slug: "web3-social-tokens-creadores",
+    title: "Web3 para Creadores: Social Tokens, NFTs y Economía de Creadores",
+    excerpt: "Introducción a la economía de creadores en Web3: social tokens, membresías NFT, DAOs y nuevas formas de monetizar comunidad.",
+    category: "Web3",
+    readTime: "11 min",
+    date: "2024-01-04",
+    seoKeywords: "web3 creadores, social tokens, nfts creadores, economia creadores",
+    content: `
+      <h2>Social Tokens: Tu Propia Moneda</h2>
+      <p>Un token que representa tu marca. Usos:</p>
+      <ul>
+        <li><strong>Acceso:</strong> Contenido exclusivo para holders</li>
+        <li><strong>Gobernanza:</strong> Vota en decisiones de la comunidad</li>
+        <li><strong>Recompensas:</strong> Merch, meet & greet, early access</li>
+        <li><strong>Monetización:</strong> Vende tokens para financiar proyectos</li>
+      </ul>
+
+      <h2>Plataformas para Crear Tokens</h2>
+      <ul>
+        <li><strong>Roll:</strong> Social tokens en Ethereum</li>
+        <li><strong>Rally:</strong> Tokens para creadores (fácil)</li>
+        <li><strong>Coinvise:</strong> Token + airdrops + quests</li>
+      </ul>
+
+      <h2>NFTs como Membresías</h2>
+      <p>En lugar de suscripción mensual, vende NFTs que dan acceso permanente. Beneficios: ingresos únicos + comunidad comprometida + royalties en reventa.</p>
+
+      <h2>DAOs de Creadores</h2>
+      <p>Organizaciones autónomas descentralizadas. Tu comunidad posee parte del proyecto y vota en dirección. Ejemplo: un canal de YouTube gobernado por sus suscriptores.</p>
+
+      <h2>Riesgos y Realidad</h2>
+      <p>Web3 aún es nicho. No abandones plataformas tradicionales. Úsalo como capa extra de monetización para tu comunidad más fiel (1-5% de seguidores).</p>
+    `,
+  },
+};
+
+// Merge all articles
+const allArticles: Record<string, Article> = { ...articles, ...moreArticles };
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const article = articles[slug];
+  const article = allArticles[slug];
   
   if (!article) {
     return {
@@ -446,7 +825,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BlogArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const article = articles[slug];
+  const article = allArticles[slug];
 
   if (!article) {
     notFound();

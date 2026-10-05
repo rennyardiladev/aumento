@@ -110,7 +110,7 @@ function encontrarPerfil(data: any, username: string, providerName: string): Ins
 }
 
 // ==========================================
-// 0. PROVEEDOR: INSTAGRAM HTML (gratis, sin API)
+// 0. PROVEEDOR: INSTAGRAM HTML (Gratis, se omite si hay bloqueos)
 // ==========================================
 function decodeJsonString(raw: string): string {
   try {
@@ -140,7 +140,7 @@ async function getFromInstagramHtml(username: string): Promise<InstagramResult |
     const html = await response.text();
 
     const start = html.indexOf('"xig_user_by_username"');
-    if (start === -1) return null; // login wall o bloqueo
+    if (start === -1) return null; // Bloqueado por login wall, pasa al siguiente proveedor sin romper
     const block = html.slice(start, start + 6000);
     const pick = (re: RegExp) => block.match(re)?.[1];
 
@@ -162,9 +162,8 @@ async function getFromInstagramHtml(username: string): Promise<InstagramResult |
       externalUrl: `https://www.instagram.com/${username}/`,
       provider: "InstagramHTML",
     };
-  } catch (err) {
-    console.warn("[InstagramHTML] Falló, pasando al siguiente nivel...", err);
-    return null;
+  } catch {
+    return null; // Si falla por red o timeout, pasa silenciosamente al siguiente
   }
 }
 
@@ -173,19 +172,16 @@ async function getFromInstagramHtml(username: string): Promise<InstagramResult |
 // ==========================================
 async function getFromHasData(username: string): Promise<InstagramResult | null> {
   if (!HASDATA_API_KEY) return null;
-  try {
-    const url = `https://api.hasdata.com/scrape/instagram/profile?handle=${encodeURIComponent(username)}`;
-    const response = await fetchT(url, {
-      method: "GET",
-      headers: { "x-api-key": HASDATA_API_KEY, "Content-Type": "application/json" },
-    });
-    if (!response.ok) return null;
-    const data = await leerJson(response);
-    return encontrarPerfil(data, username, "HasData");
-  } catch (err) {
-    console.warn("[HasData] Falló, pasando al siguiente nivel...", err);
-    return null;
+  const url = `https://api.hasdata.com/scrape/instagram/profile?handle=${encodeURIComponent(username)}`;
+  const response = await fetchT(url, {
+    method: "GET",
+    headers: { "x-api-key": HASDATA_API_KEY, "Content-Type": "application/json" },
+  });
+  if (!response.ok) {
+    throw new Error(`HasData HTTP Error: ${response.status}`);
   }
+  const data = await leerJson(response);
+  return encontrarPerfil(data, username, "HasData");
 }
 
 // ==========================================
@@ -193,19 +189,16 @@ async function getFromHasData(username: string): Promise<InstagramResult | null>
 // ==========================================
 async function getFromSocialCrawl(username: string): Promise<InstagramResult | null> {
   if (!SOCIALCRAWL_API_KEY) return null;
-  try {
-    const url = `https://www.socialcrawl.dev/v1/instagram/profile?handle=${encodeURIComponent(username)}`;
-    const response = await fetchT(url, {
-      method: "GET",
-      headers: { "x-api-key": SOCIALCRAWL_API_KEY, Accept: "application/json" },
-    });
-    if (!response.ok) return null;
-    const data = await leerJson(response);
-    return encontrarPerfil(data?.data ?? data, username, "SocialCrawl");
-  } catch (err) {
-    console.warn("[SocialCrawl] Falló, pasando al siguiente nivel...", err);
-    return null;
+  const url = `https://www.socialcrawl.dev/v1/instagram/profile?handle=${encodeURIComponent(username)}`;
+  const response = await fetchT(url, {
+    method: "GET",
+    headers: { "x-api-key": SOCIALCRAWL_API_KEY, Accept: "application/json" },
+  });
+  if (!response.ok) {
+    throw new Error(`SocialCrawl HTTP Error: ${response.status}`);
   }
+  const data = await leerJson(response);
+  return encontrarPerfil(data?.data ?? data, username, "SocialCrawl");
 }
 
 // ==========================================
@@ -213,19 +206,16 @@ async function getFromSocialCrawl(username: string): Promise<InstagramResult | n
 // ==========================================
 async function getFromProfileQuery(username: string): Promise<InstagramResult | null> {
   if (!PROFILEQUERY_TOKEN) return null;
-  try {
-    const url = `https://api.profilequery.com/v1/profile?handle=${encodeURIComponent(username)}`;
-    const response = await fetchT(url, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${PROFILEQUERY_TOKEN}`, Accept: "application/json" },
-    });
-    if (!response.ok) return null;
-    const data = await leerJson(response);
-    return encontrarPerfil(data?.data ?? data, username, "ProfileQuery");
-  } catch (err) {
-    console.warn("[ProfileQuery] Falló, pasando al siguiente nivel...", err);
-    return null;
+  const url = `https://api.profilequery.com/v1/profile?handle=${encodeURIComponent(username)}`;
+  const response = await fetchT(url, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${PROFILEQUERY_TOKEN}`, Accept: "application/json" },
+  });
+  if (!response.ok) {
+    throw new Error(`ProfileQuery HTTP Error: ${response.status}`);
   }
+  const data = await leerJson(response);
+  return encontrarPerfil(data?.data ?? data, username, "ProfileQuery");
 }
 
 // ==========================================
@@ -233,24 +223,21 @@ async function getFromProfileQuery(username: string): Promise<InstagramResult | 
 // ==========================================
 async function getFromApify(username: string): Promise<InstagramResult | null> {
   if (!APIFY_TOKEN) return null;
-  try {
-    const url = `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
-    const response = await fetchT(
-      url,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usernames: [username] }),
-      },
-      20000 // Apify tarda más
-    );
-    if (!response.ok) return null;
-    const data = await leerJson(response);
-    return encontrarPerfil(data, username, "Apify");
-  } catch (err) {
-    console.warn("[Apify] Falló, pasando al siguiente...", err);
-    return null;
+  const url = `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${APIFY_TOKEN}`;
+  const response = await fetchT(
+    url,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usernames: [username] }),
+    },
+    20000
+  );
+  if (!response.ok) {
+    throw new Error(`Apify HTTP Error: ${response.status}`);
   }
+  const data = await leerJson(response);
+  return encontrarPerfil(data, username, "Apify");
 }
 
 // ==========================================
@@ -258,39 +245,33 @@ async function getFromApify(username: string): Promise<InstagramResult | null> {
 // ==========================================
 async function getFromRapidApi(username: string): Promise<InstagramResult | null> {
   if (!IG_RAPID_KEY) return null;
-  try {
-    const host = "instagram-statistics-api.p.rapidapi.com";
-    const url = `https://${host}/community2?username=${encodeURIComponent(username)}`;
-    const response = await fetchT(url, {
-      method: "GET",
-      headers: { "x-rapidapi-key": IG_RAPID_KEY, "x-rapidapi-host": host },
-    });
-    if (!response.ok) return null;
-    const data = await leerJson(response);
-    return encontrarPerfil(data?.result ?? data?.data ?? data, username, "RapidAPI");
-  } catch (err) {
-    console.warn("[RapidAPI] Falló, pasando al siguiente...", err);
-    return null;
+  const host = "instagram-statistics-api.p.rapidapi.com";
+  const url = `https://${host}/community2?username=${encodeURIComponent(username)}`;
+  const response = await fetchT(url, {
+    method: "GET",
+    headers: { "x-rapidapi-key": IG_RAPID_KEY, "x-rapidapi-host": host },
+  });
+  if (!response.ok) {
+    throw new Error(`RapidAPI HTTP Error: ${response.status}`);
   }
+  const data = await leerJson(response);
+  return encontrarPerfil(data?.result ?? data?.data ?? data, username, "RapidAPI");
 }
 
 // ==========================================
-// 6. PROVEEDOR: ENSEMBLEDATA (el más pesado en unidades)
+// 6. PROVEEDOR: ENSEMBLEDATA
 // ==========================================
 async function getFromEnsembleData(username: string): Promise<InstagramResult | null> {
   if (!ENSEMBLEDATA_TOKEN) return null;
-  try {
-    const url = `https://ensembledata.com/apis/instagram/user/detailed-info?username=${encodeURIComponent(
-      username
-    )}&token=${ENSEMBLEDATA_TOKEN}`;
-    const response = await fetchT(url, { method: "GET" });
-    if (!response.ok) return null;
-    const data = await leerJson(response);
-    return encontrarPerfil(data?.data ?? data, username, "EnsembleData");
-  } catch (err) {
-    console.warn("[EnsembleData] Falló, pasando al respaldo final...", err);
-    return null;
+  const url = `https://ensembledata.com/apis/instagram/user/detailed-info?username=${encodeURIComponent(
+    username
+  )}&token=${ENSEMBLEDATA_TOKEN}`;
+  const response = await fetchT(url, { method: "GET" });
+  if (!response.ok) {
+    throw new Error(`EnsembleData HTTP Error: ${response.status}`);
   }
+  const data = await leerJson(response);
+  return encontrarPerfil(data?.data ?? data, username, "EnsembleData");
 }
 
 // ==========================================
@@ -302,14 +283,14 @@ async function checkBrightDataSnapshot(snapshotId: string, username: string) {
     headers: { Authorization: `Bearer ${BRIGHTDATA_API_KEY}`, Accept: "application/json" },
   });
   const data = await leerJson(response);
-  if (!response.ok) throw new Error("Progress HTTP error");
+  if (!response.ok) throw new Error("Progress HTTP error en Bright Data");
 
   const status = String(data?.status ?? data?.state ?? "").toLowerCase();
   const runningTime = data?.running_time ?? data?.elapsed_time ?? 0;
   if (["running", "pending", "processing", "starting", "created", "queued", ""].includes(status)) {
     return { status: "processing" as const, running_time: runningTime };
   }
-  if (["failed", "error", "cancelled"].includes(status)) throw new Error("Bright Data failed");
+  if (["failed", "error", "cancelled"].includes(status)) throw new Error("Bright Data falló en el procesamiento del snapshot");
 
   const downloadUrl = `${BRIGHTDATA_API}/datasets/v3/snapshot/${encodeURIComponent(snapshotId)}?format=json`;
   const download = await fetchT(downloadUrl, {
@@ -323,66 +304,65 @@ async function checkBrightDataSnapshot(snapshotId: string, username: string) {
 async function getFromBrightData(username: string, snapshotId?: string): Promise<InstagramResult> {
   if (!BRIGHTDATA_API_KEY) return { existe: false, error: "BRIGHTDATA_API_KEY no configurada" };
 
-  try {
-    if (snapshotId) {
-      const res = await checkBrightDataSnapshot(snapshotId, username);
-      if (res.status === "ready" && "data" in res && res.data) {
-        const result = { ...res.data };
-        if (res.running_time) result.running_time = res.running_time;
-        return result;
-      }
-      return { existe: false, processing: true, snapshotId, username, running_time: res.running_time ?? 0 };
-    }
-
-    const scrapeUrl = `${BRIGHTDATA_API}/datasets/v3/scrape?dataset_id=${encodeURIComponent(
-      DATASET_ID
-    )}&notify=false&include_errors=true`;
-    const response = await fetchT(
-      scrapeUrl,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${BRIGHTDATA_API_KEY}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ input: [{ url: `https://www.instagram.com/${username}/` }], limit_per_input: 1 }),
-      },
-      30000
-    );
-
-    const data = await leerJson(response);
-    if (!response.ok) return { existe: false, error: "Bright Data HTTP Error" };
-
-    const profile = encontrarPerfil(data, username, "BrightData");
-    if (profile) {
-      const result = { ...profile };
-      if (data?.running_time) result.running_time = data.running_time;
+  if (snapshotId) {
+    const res = await checkBrightDataSnapshot(snapshotId, username);
+    if (res.status === "ready" && "data" in res && res.data) {
+      const result = { ...res.data };
+      if (res.running_time) result.running_time = res.running_time;
       return result;
     }
-
-    const newSnapshotId = data?.snapshot_id ?? data?.snapshotId;
-    if (newSnapshotId) {
-      const runningTime = data?.running_time ?? 0;
-      return { existe: false, processing: true, snapshotId: newSnapshotId, username, running_time: runningTime };
-    }
-
-    return { existe: false, processing: true, snapshotId: null, username };
-  } catch (err) {
-    console.warn("[BrightData] Falló", err);
-    return { existe: false, error: "No se pudo consultar el perfil" };
+    return { existe: false, processing: true, snapshotId, username, running_time: res.running_time ?? 0 };
   }
+
+  const scrapeUrl = `${BRIGHTDATA_API}/datasets/v3/scrape?dataset_id=${encodeURIComponent(
+    DATASET_ID
+  )}&notify=false&include_errors=true`;
+  const response = await fetchT(
+    scrapeUrl,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${BRIGHTDATA_API_KEY}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ input: [{ url: `https://www.instagram.com/${username}/` }], limit_per_input: 1 }),
+    },
+    30000
+  );
+
+  const data = await leerJson(response);
+  if (!response.ok) return { existe: false, error: "Bright Data HTTP Error en scrape" };
+
+  const profile = encontrarPerfil(data, username, "BrightData");
+  if (profile) {
+    const result = { ...profile };
+    if (data?.running_time) result.running_time = data.running_time;
+    return result;
+  }
+
+  const newSnapshotId = data?.snapshot_id ?? data?.snapshotId;
+  if (newSnapshotId) {
+    const runningTime = data?.running_time ?? 0;
+    return { existe: false, processing: true, snapshotId: newSnapshotId, username, running_time: runningTime };
+  }
+
+  return { existe: false, processing: true, snapshotId: null, username };
 }
 
 // ==========================================
-// FUNCIÓN PRINCIPAL (EL ENRUTADOR EN CASCADA)
+// FUNCIÓN PRINCIPAL (ENRUTADOR)
 // ==========================================
 export async function getInstagramProfile(user: string, snapshotId?: string): Promise<InstagramResult> {
   const username = cleanIgUsername(user);
   if (!username) return { existe: false, error: "Usuario de Instagram inválido" };
 
   if (snapshotId) {
-    return await getFromBrightData(username, snapshotId);
+    try {
+      return await getFromBrightData(username, snapshotId);
+    } catch (err: any) {
+      return { existe: false, error: `Alerta BrightData (Snapshot): ${err.message}` };
+    }
   }
 
   // Caché
@@ -391,8 +371,16 @@ export async function getInstagramProfile(user: string, snapshotId?: string): Pr
     return cached.data;
   }
 
-  const providers: Array<[string, (u: string) => Promise<InstagramResult | null>]> = [
-    ["InstagramHTML", getFromInstagramHtml],
+  // 1. Intentar primero con InstagramHTML (si falla por login wall, pasa silenciosamente)
+  const htmlResult = await getFromInstagramHtml(username);
+  if (htmlResult?.existe) {
+    console.log("[Router] Éxito con InstagramHTML");
+    cache.set(username, { at: Date.now(), data: htmlResult });
+    return htmlResult;
+  }
+
+  // 2. APIs de pago en cascada (Si una de estas falla con error crítico, se detiene y avisa)
+  const paidProviders: Array<[string, (u: string) => Promise<InstagramResult | null>]> = [
     ["HasData", getFromHasData],
     ["SocialCrawl", getFromSocialCrawl],
     ["ProfileQuery", getFromProfileQuery],
@@ -401,15 +389,27 @@ export async function getInstagramProfile(user: string, snapshotId?: string): Pr
     ["EnsembleData", getFromEnsembleData],
   ];
 
-  for (const [name, fn] of providers) {
-    const result = await fn(username);
-    if (result?.existe) {
-      console.log(`[Router] Éxito con ${name}`);
-      cache.set(username, { at: Date.now(), data: result });
-      return result;
+  for (const [name, fn] of paidProviders) {
+    try {
+      const result = await fn(username);
+      if (result?.existe) {
+        console.log(`[Router] Éxito con ${name}`);
+        cache.set(username, { at: Date.now(), data: result });
+        return result;
+      }
+    } catch (err: any) {
+      console.warn(`[Router] Alerta: El proveedor ${name} falló y detuvo la cascada:`, err.message);
+      return {
+        existe: false,
+        error: `Alerta: El proveedor [${name}] falló (${err.message}). Se detuvo la búsqueda en cascada.`
+      };
     }
   }
 
-  console.log("[Router] Las APIs rápidas fallaron. Usando Bright Data...");
-  return await getFromBrightData(username);
+  console.log("[Router] Las APIs principales fallaron. Intentando con Bright Data...");
+  try {
+    return await getFromBrightData(username);
+  } catch (err: any) {
+    return { existe: false, error: `Alerta BrightData final falló: ${err.message}` };
+  }
 }

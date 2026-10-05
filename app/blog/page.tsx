@@ -102,6 +102,103 @@ const articles = [
     seoKeywords: "metricas redes sociales, analiticas instagram, kpis crecimiento social media",
   },
 ];
+ 
+// Additional articles for marketing blog
+const moreArticles = [
+  {
+    slug: "facebook-ads-para-creadores",
+    title: "Facebook Ads para Creadores: Guía de Campañas Rentables 2024",
+    excerpt: "Aprende a crear campañas de Facebook Ads que conviertan: estructura de campañas, audiencias, creativos y optimización de ROAS.",
+    category: "Facebook Ads",
+    readTime: "10 min",
+    date: "2024-01-20",
+    seoKeywords: "facebook ads creadores, campañas facebook ads, roas facebook",
+  },
+  {
+    slug: "tiktok-shop-afiliados",
+    title: "TikTok Shop y Afiliados: Cómo Vender sin Inventario",
+    excerpt: "Guía completa para monetizar con TikTok Shop: configuración, selección de productos, contenido que vende y escalado.",
+    category: "TikTok",
+    readTime: "9 min",
+    date: "2024-01-18",
+    seoKeywords: "tiktok shop, afiliados tiktok, vender en tiktok",
+  },
+  {
+    slug: "email-marketing-creadores",
+    title: "Email Marketing para Creadores: Construye tu Lista y Vende en Automático",
+    excerpt: "Por qué necesitas una lista de email, lead magnets que convierten, secuencias de bienvenida y automatizaciones de ventas.",
+    category: "Email Marketing",
+    readTime: "8 min",
+    date: "2024-01-16",
+    seoKeywords: "email marketing creadores, lead magnet, automatizacion email",
+  },
+  {
+    slug: "linkedin-personal-branding",
+    title: "Personal Branding en LinkedIn: Estrategia para Profesionales y B2B",
+    excerpt: "Optimiza tu perfil, estrategia de contenido, networking y cómo generar leads cualificados en LinkedIn.",
+    category: "LinkedIn",
+    readTime: "7 min",
+    date: "2024-01-14",
+    seoKeywords: "personal branding linkedin, linkedin b2b, generar leads linkedin",
+  },
+  {
+    slug: "pinterest-trafico-web",
+    title: "Pinterest para Tráfico Web: SEO Visual que Convierte",
+    excerpt: "Cómo usar Pinterest como motor de búsqueda visual: pines optimizados, tableros, rich pins y estrategia de contenido evergreen.",
+    category: "Pinterest",
+    readTime: "6 min",
+    date: "2024-01-13",
+    seoKeywords: "pinterest trafico web, seo pinterest, marketing pinterest",
+  },
+  {
+    slug: "shorts-vs-reels-vs-tiktok",
+    title: "Shorts vs Reels vs TikTok: Dónde Publicar en 2024",
+    excerpt: "Comparativa completa de los 3 formatos de video corto: algoritmo, monetización, audiencia, herramientas y estrategia multiplataforma.",
+    category: "Video Corto",
+    readTime: "8 min",
+    date: "2024-01-11",
+    seoKeywords: "shorts vs reels vs tiktok, video corto 2024, donde publicar",
+  },
+  {
+    slug: "community-management-escalado",
+    title: "Community Management a Escala: Automatización sin Perder Humanidad",
+    excerpt: "Herramientas y workflows para gestionar comunidades grandes: respuestas automáticas, moderación, CRM social y escalado de equipo.",
+    category: "Community",
+    readTime: "7 min",
+    date: "2024-01-09",
+    seoKeywords: "community management, automatizacion community, gestion comunidad",
+  },
+  {
+    slug: "seo-local-negocios-fisicos",
+    title: "SEO Local para Negocios Físicos: Domina Google Maps y Atrae Clientes",
+    excerpt: "Optimiza tu ficha de Google Business, reseñas, citations locales, contenido geo-localizado y estrategia de link building local.",
+    category: "SEO Local",
+    readTime: "9 min",
+    date: "2024-01-07",
+    seoKeywords: "seo local, google maps negocio, ficha google business",
+  },
+  {
+    slug: "content-repurposing-workflow",
+    title: "Content Repurposing: Workflow para Multiplicar tu Contenido x10",
+    excerpt: "Sistema completo para transformar 1 pieza de contenido en 20+ formatos: video, audio, texto, gráficos para todas las plataformas.",
+    category: "Productividad",
+    readTime: "10 min",
+    date: "2024-01-06",
+    seoKeywords: "content repurposing, reutilizar contenido, workflow contenido",
+  },
+  {
+    slug: "web3-social-tokens-creadores",
+    title: "Web3 para Creadores: Social Tokens, NFTs y Economía de Creadores",
+    excerpt: "Introducción a la economía de creadores en Web3: social tokens, membresías NFT, DAOs y nuevas formas de monetizar comunidad.",
+    category: "Web3",
+    readTime: "11 min",
+    date: "2024-01-04",
+    seoKeywords: "web3 creadores, social tokens, nfts creadores, economia creadores",
+  },
+];
+
+// Combine all articles
+const allArticles = [...articles, ...moreArticles];
 
 export default function BlogPage() {
   return (
@@ -118,7 +215,7 @@ export default function BlogPage() {
         </header>
 
         <div style={{ display: "grid", gap: "24px" }}>
-          {articles.map((article) => (
+          {allArticles.map((article) => (
             <ArticleCard key={article.slug} article={article} />
           ))}
         </div>
