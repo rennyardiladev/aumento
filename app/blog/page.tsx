@@ -8,6 +8,18 @@ export const metadata: Metadata = {
   title: "Blog - Marketing Digital, Seguidores, Likes y SEO | Aumento de Seguidores",
   description: "Artículos expertos sobre marketing digital, crecimiento de seguidores, estrategias de engagement, SEO para redes sociales y monetización de contenido.",
   keywords: "marketing digital, seguidores, likes, comentarios, visualizaciones, SEO, redes sociales, Instagram, TikTok, YouTube",
+  openGraph: {
+    title: "Blog - Marketing Digital | Aumento de Seguidores",
+    description: "Artículos expertos sobre marketing digital, crecimiento de seguidores, estrategias de engagement, SEO para redes sociales y monetización de contenido.",
+    type: "website",
+    images: ["/icono.webp"],
+  },
+  twitter: {
+    card: "summary",
+    title: "Blog - Marketing Digital | Aumento de Seguidores",
+    description: "Artículos expertos sobre marketing digital, crecimiento de seguidores, estrategias de engagement, SEO para redes sociales.",
+    images: ["/icono.webp"],
+  },
 };
 
 const articles = [

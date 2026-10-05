@@ -819,6 +819,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       type: "article",
       publishedTime: article.date,
       tags: [article.category],
+      images: ["/icono.webp"],
+    },
+    twitter: {
+      card: "summary",
+      title: article.title,
+      description: article.excerpt,
+      images: ["/icono.webp"],
     },
   };
 }
