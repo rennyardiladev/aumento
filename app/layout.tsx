@@ -9,6 +9,9 @@ export const metadata: Metadata = {
     shortcut: "/icono.webp",
     apple: "/icono.webp",
   },
+  other: {
+    cryptomus: "9eebc8d8",
+  },
 };
 export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 
