@@ -70,9 +70,9 @@ export const metadata: Metadata = {
     site: "@aumentoseguidores",
   },
   icons: {
-    icon: "/seo.webp",
+    icon: "/icono.webp",
     shortcut: "/seo.webp",
-    apple: "/seo.webp",
+    apple: "/icono.webp",
   },
   other: {
     cryptomus: "9eebc8d8",
