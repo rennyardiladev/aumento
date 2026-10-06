@@ -24,7 +24,7 @@ export interface Paquete { n: number; p: number } // cantidad y precio en COP
 // Precios base por 1000 (en COP)
 const BASE_PRICES: Record<Plat, number> = {
   instagram: 30000,
-  facebook: 25000,
+  facebook: 12000,
   tiktok: 80000,
   youtube: 129000,
   spotify: 20000,
