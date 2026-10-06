@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { PLAT, PAQUETES, USUARIO_RE, type Plat, type Paquete } from "@/lib/plataformas";
+import { PLAT, PAQUETES_POR_PLATAFORMA, USUARIO_RE, type Plat, type Paquete } from "@/lib/plataformas";
 import { consultarPerfil } from "@/app/actions/perfil";
 import { CFG } from "@/lib/config";
 import { Hero } from "./Hero";
@@ -351,7 +351,7 @@ export default function Home() {
               <section className="card">
                 <b>2. Elige tu paquete</b>
                 <div className="pk">
-                  {PAQUETES.map((x) => (
+                  {PAQUETES_POR_PLATAFORMA[plat].map((x) => (
                     <div key={x.n} className={`opt${sel?.n === x.n ? " sel" : ""}`} onClick={() => { setSel(x); setOrden(""); }}>
                       <b>{fmt(x.n)}</b>{P.u}<br />${fmt(x.p)} {CFG.moneda}
                     </div>

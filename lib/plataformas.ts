@@ -20,12 +20,37 @@ export const PLAT: Record<Plat, PlatInfo> = {
 export const PLAT_KEYS = Object.keys(PLAT) as Plat[];
 
 export interface Paquete { n: number; p: number } // cantidad y precio en COP
-export const PAQUETES: Paquete[] = [
-  { n: 100, p: 9900 },
-  { n: 500, p: 39900 },
-  { n: 1000, p: 80000 },
-  { n: 5000, p: 390000 },
-];
+
+// Precios base por 1000 (en COP)
+const BASE_PRICES: Record<Plat, number> = {
+  instagram: 30000,
+  facebook: 25000,
+  tiktok: 80000,
+  youtube: 129000,
+  spotify: 20000,
+};
+
+function calcularPaquetes(plataforma: Plat): Paquete[] {
+  const base = BASE_PRICES[plataforma];
+  const ratios = [100, 500, 1000, 5000];
+  return ratios.map((n) => {
+    const precioBase = (base / 1000) * n;
+    // Redondear a múltiplos de 100
+    const p = Math.round(precioBase / 100) * 100;
+    return { n, p };
+  });
+}
+
+export const PAQUETES_POR_PLATAFORMA: Record<Plat, Paquete[]> = {
+  instagram: calcularPaquetes("instagram"),
+  facebook: calcularPaquetes("facebook"),
+  tiktok: calcularPaquetes("tiktok"),
+  youtube: calcularPaquetes("youtube"),
+  spotify: calcularPaquetes("spotify"),
+};
+
+// Legacy export for backward compatibility
+export const PAQUETES = PAQUETES_POR_PLATAFORMA.tiktok;
 
 export interface Perfil {
   existe: boolean;
