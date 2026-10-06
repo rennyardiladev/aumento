@@ -9,6 +9,6 @@ export const CFG = {
     instagram: "https://www.instagram.com/",
     facebook: "https://www.facebook.com/",
     tiktok: "https://www.tiktok.com/",
-    youtube: "https://www.youtube.com/",
+    youtube: "https://www.youtube.com/@aumentodeseguidores",
   } as Record<string, string>,
 };
