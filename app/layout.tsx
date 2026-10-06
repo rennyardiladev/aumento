@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     description: "Aumenta seguidores, likes, comentarios y visualizaciones en Instagram, Facebook, TikTok, YouTube y Spotify. Servicio rápido, seguro y garantizado.",
     images: [
       {
-        url: "/icono.webp",
+        url: "/seo.webp",
         width: 512,
         height: 512,
         alt: "Aumento de Seguidores - Logo",
@@ -65,14 +65,14 @@ export const metadata: Metadata = {
     card: "summary",
     title: "Aumento de Seguidores | Instagram, TikTok, YouTube, Facebook y Spotify",
     description: "Aumenta seguidores, likes, comentarios y visualizaciones en Instagram, Facebook, TikTok, YouTube y Spotify.",
-    images: ["/icono.webp"],
+    images: ["/seo.webp"],
     creator: "@aumentoseguidores",
     site: "@aumentoseguidores",
   },
   icons: {
-    icon: "/icono.webp",
-    shortcut: "/icono.webp",
-    apple: "/icono.webp",
+    icon: "/seo.webp",
+    shortcut: "/seo.webp",
+    apple: "/seo.webp",
   },
   other: {
     cryptomus: "9eebc8d8",
